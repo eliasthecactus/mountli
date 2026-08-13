@@ -94,12 +94,29 @@ struct RemoteWizard: View {
             }
         }
         #if os(macOS)
-            .frame(minWidth: 560, minHeight: 590)
+            .frame(
+                minWidth: 620,
+                idealWidth: 720,
+                maxWidth: 900,
+                minHeight: 620,
+                idealHeight: 760,
+                maxHeight: 900
+            )
+        #else
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         #endif
-        .alert("Configuration failed", isPresented: Binding(get: { localError != nil }, set: { if !$0 { localError = nil } })) {
-            Button("OK", role: .cancel) { localError = nil }
-        } message: {
-            Text(localError ?? "Unknown error")
+        .sheet(
+            isPresented: Binding(
+                get: { localError != nil },
+                set: { if !$0 { localError = nil } }
+            )
+        ) {
+            ActionFailureView(
+                title: "Configuration failed",
+                message: localError ?? "Unknown error",
+                dismiss: { localError = nil }
+            )
         }
         .fileImporter(
             isPresented: $showingResourceImporter,
@@ -129,7 +146,10 @@ struct RemoteWizard: View {
                         } label: {
                             VStack(alignment: .leading, spacing: 10) {
                                 ProviderCardIcon(type: provider.name)
-                                Text(provider.description).font(.headline).lineLimit(1)
+                                Text(provider.description)
+                                    .font(.headline)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
                                 Text(provider.name).font(.caption).foregroundStyle(.secondary)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -194,10 +214,17 @@ struct RemoteWizard: View {
                         Text(remote.displayName).tag(remote.engineName)
                     }
                 }
-                HStack {
-                    TextField("Dedicated encrypted root", text: $cryptRoot)
-                    Button("Browse…") { showingCryptBrowser = true }
-                        .disabled(cryptBaseEngineName.isEmpty)
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        TextField("Dedicated encrypted root", text: $cryptRoot)
+                        Button("Browse…") { showingCryptBrowser = true }
+                            .disabled(cryptBaseEngineName.isEmpty)
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Dedicated encrypted root", text: $cryptRoot)
+                        Button("Browse…") { showingCryptBrowser = true }
+                            .disabled(cryptBaseEngineName.isEmpty)
+                    }
                 }
             }
             Section("Name encryption") {
@@ -214,8 +241,15 @@ struct RemoteWizard: View {
                     text: $cryptPassword
                 )
                 if editing == nil {
-                    LabeledContent("Generated second password") {
-                        Text(cryptSecondPassword).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Generated second password")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(cryptSecondPassword)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("crypt-generated-password")
                     }
                     Toggle("I saved the generated second password", isOn: $cryptPasswordAcknowledged)
                 } else {
@@ -227,10 +261,12 @@ struct RemoteWizard: View {
                 )
                 .font(.footnote)
                 .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
             }
             Section {
                 Button("Continue") { startCrypt(provider) }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("crypt-continue")
                     .disabled(
                         displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                             || cryptBaseEngineName.isEmpty
@@ -317,7 +353,12 @@ struct RemoteWizard: View {
                             showingResourceImporter = true
                         }
                     }
-                    if !option.help.isEmpty { Text(option.help).font(.footnote).foregroundStyle(.secondary) }
+                    if !option.help.isEmpty {
+                        Text(option.help)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if let message = step.message, !message.isEmpty {
                         Label(message, systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote)
@@ -330,7 +371,16 @@ struct RemoteWizard: View {
                             Button {
                                 answer = example.value
                             } label: {
-                                LabeledContent(example.help.isEmpty ? example.value : example.help, value: example.value)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(example.help.isEmpty ? example.value : example.help)
+                                    if !example.help.isEmpty {
+                                        Text(example.value)
+                                            .font(.caption.monospaced())
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }

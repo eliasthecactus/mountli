@@ -24,3 +24,4 @@ xcodebuild archive -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS -configurati
 xcodebuild -exportArchive -archivePath "$BUILD_DIR/MOUNTLI-macOS.xcarchive" \
   -exportPath "$BUILD_DIR/macOS" -exportOptionsPlist Config/ExportOptions/AppStore.plist
 "$ROOT/Scripts/verify-release.sh" app-store "$BUILD_DIR" "$VERSION"
+"$ROOT/Scripts/package-app-store-connect.sh" "$VERSION" "$BUILD_NUMBER"

@@ -15,6 +15,7 @@ cd "$ROOT"
 swift test --package-path Packages/MountliCore --filter bridgeCatalogAndConfigurationEnvelopeDecode
 swift test --package-path Packages/MountliCore --filter sqliteMigratesReconcilesAndKeepsIdentityAcrossRename
 swift test --package-path Packages/MountliFileProvider --filter protectedStagesPreserveSparseOffsetsAndOnlyCleanInactiveFiles
+"$ROOT/Scripts/test-app-store-packaging.sh"
 
 # Optional live fixtures are explicit, bounded, and never silently skipped in protected CI.
 if [[ "${MOUNTLI_REQUIRE_NETWORK_FIXTURES:-0}" == "1" ]]; then

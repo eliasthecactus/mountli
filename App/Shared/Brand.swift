@@ -45,3 +45,45 @@ struct StatusPill: View {
             .background(color.opacity(0.12), in: Capsule())
     }
 }
+
+struct ActionFailureView: View {
+    let title: String
+    let message: String
+    let dismiss: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 36, weight: .semibold))
+                            .foregroundStyle(.orange)
+                            .accessibilityHidden(true)
+                        Text(title)
+                            .font(.title2.bold())
+                        Text(message)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                    }
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 480)
+                    .padding(28)
+                    .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done", action: dismiss)
+                }
+            }
+        }
+        #if os(iOS)
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+        #else
+            .frame(minWidth: 460, idealWidth: 520, maxWidth: 620, minHeight: 300, idealHeight: 360, maxHeight: 540)
+        #endif
+    }
+}

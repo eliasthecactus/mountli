@@ -1,6 +1,6 @@
 # App Review Notes
 
-MOUNTLI is a File Provider utility. It requires Apple approval for the replicated File Provider entitlement on the host and extensions before App Store submission.
+MOUNTLI is a replicated File Provider utility. Its host and extensions require exact App IDs, a shared App Group, and matching distribution profiles. The production targets do not claim the development-only FileProvider Testing Mode entitlement; the standard File Provider extension is reviewed with the app.
 
 ## Supplied review path
 
@@ -13,14 +13,14 @@ The production review build uses a least-privilege read/write WebDAV demo owned 
 5. In Files/Finder, open `Welcome.txt`, duplicate it, edit the duplicate, rename it, create a folder, move the file into it, download it again, and delete the copy. The original fixture remains available for the next reviewer.
 6. Return to MOUNTLI. **Activity** shows the completed operations; **Issues** explains any network/authentication recovery.
 
-Attach the current short screen capture to App Review metadata. It must show adding the File Provider location in Files/Finder and completing the create/edit/rename/delete path; this is required whenever the entitlement-dependent control is not discoverable from the review build alone.
+Attach the current short screen capture to App Review metadata. It must show adding the File Provider location in Files/Finder and completing the create/edit/rename/delete path; this is required whenever the File Provider control is not discoverable from the review build alone.
 
 ## Fixture operations
 
 - Before submission, run the protected fixture reset job, verify read/write access with the release candidate, and confirm the account can access only `review-fixture`.
 - Never place personal/customer data or release secrets in the fixture.
 - After review, reset non-sensitive content and rotate/revoke the password. Rotate immediately after suspected disclosure or when review completes.
-- App Store/TestFlight promotion is blocked when any review contact field, fixture credential, real screenshot set, or entitlement capture is absent.
+- App Store/TestFlight promotion is blocked when any review contact field, fixture credential, real screenshot set, or signed entitlement/profile capture is absent.
 
 ## Privacy declarations
 

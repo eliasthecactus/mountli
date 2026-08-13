@@ -278,6 +278,20 @@ public actor EncryptedVaultStore: VaultStoreProtocol {
         }
     }
 
+    public func saveMergingChanges(
+        _ updated: VaultDocument,
+        basedOn base: VaultSnapshot
+    ) async throws -> VaultSnapshot {
+        try withFileLock {
+            let current = try loadOrEmpty()
+            let document =
+                current.revision == base.revision
+                ? updated
+                : try Self.mergeChanges(from: base.document, updated: updated, current: current.document)
+            return try persist(document, expectedRevision: current.revision)
+        }
+    }
+
     public func mutate(
         expectedRevision: UInt64,
         _ mutation: @Sendable (inout VaultDocument) throws -> Void
@@ -385,6 +399,243 @@ public actor EncryptedVaultStore: VaultStoreProtocol {
         } catch VaultStoreError.notFound {
             return VaultSnapshot(revision: 0, document: VaultDocument())
         }
+    }
+
+    private static func mergeChanges(
+        from base: VaultDocument,
+        updated: VaultDocument,
+        current: VaultDocument
+    ) throws -> VaultDocument {
+        guard
+            base.schemaVersion == current.schemaVersion,
+            updated.schemaVersion == current.schemaVersion
+        else {
+            throw VaultStoreError.unsupportedSchema(updated.schemaVersion)
+        }
+
+        var merged = current
+        merged.settings = try mergeSettings(from: base.settings, updated: updated.settings, current: current.settings)
+        merged.remotes = try mergeRemotes(from: base.remotes, updated: updated.remotes, current: current.remotes)
+        merged.mounts = try mergeMounts(from: base.mounts, updated: updated.mounts, current: current.mounts)
+        return merged
+    }
+
+    private static func mergeSettings(
+        from base: GlobalSettings,
+        updated: GlobalSettings,
+        current: GlobalSettings
+    ) throws -> GlobalSettings {
+        var merged = current
+        merged.showMenuBarExtra = try mergeValue(
+            base.showMenuBarExtra,
+            updated.showMenuBarExtra,
+            current.showMenuBarExtra,
+            label: "menu bar setting"
+        )
+        merged.launchAtLogin = try mergeValue(
+            base.launchAtLogin,
+            updated.launchAtLogin,
+            current.launchAtLogin,
+            label: "launch at login setting"
+        )
+        merged.notifications = try mergeValue(
+            base.notifications,
+            updated.notifications,
+            current.notifications,
+            label: "notification settings"
+        )
+        merged.maximumConcurrentTransfersIOS = try mergeValue(
+            base.maximumConcurrentTransfersIOS,
+            updated.maximumConcurrentTransfersIOS,
+            current.maximumConcurrentTransfersIOS,
+            label: "iPhone and iPad transfer limit"
+        )
+        merged.maximumConcurrentTransfersMacOS = try mergeValue(
+            base.maximumConcurrentTransfersMacOS,
+            updated.maximumConcurrentTransfersMacOS,
+            current.maximumConcurrentTransfersMacOS,
+            label: "Mac transfer limit"
+        )
+        merged.defaultNetworkPolicy = try mergeValue(
+            base.defaultNetworkPolicy,
+            updated.defaultNetworkPolicy,
+            current.defaultNetworkPolicy,
+            label: "default network policy"
+        )
+        merged.includeFilenamesInDiagnostics = try mergeValue(
+            base.includeFilenamesInDiagnostics,
+            updated.includeFilenamesInDiagnostics,
+            current.includeFilenamesInDiagnostics,
+            label: "diagnostics privacy setting"
+        )
+        return merged
+    }
+
+    private static func mergeRemotes(
+        from base: [RemoteProfile],
+        updated: [RemoteProfile],
+        current: [RemoteProfile]
+    ) throws -> [RemoteProfile] {
+        let baseByID = Dictionary(uniqueKeysWithValues: base.map { ($0.id, $0) })
+        let updatedByID = Dictionary(uniqueKeysWithValues: updated.map { ($0.id, $0) })
+        var merged = current
+
+        for original in base {
+            guard let draft = updatedByID[original.id] else {
+                merged.removeAll { $0.id == original.id }
+                continue
+            }
+            guard let currentIndex = merged.firstIndex(where: { $0.id == original.id }) else {
+                if draft != original {
+                    throw concurrentChange("remote “\(original.displayName)”")
+                }
+                continue
+            }
+            if draft != original {
+                merged[currentIndex] = try mergeRemote(
+                    from: original,
+                    updated: draft,
+                    current: merged[currentIndex]
+                )
+            }
+        }
+
+        for draft in updated where baseByID[draft.id] == nil {
+            if let existing = merged.first(where: { $0.id == draft.id }) {
+                guard existing == draft else { throw concurrentChange("new remote “\(draft.displayName)”") }
+            } else {
+                merged.append(draft)
+            }
+        }
+        return merged
+    }
+
+    private static func mergeRemote(
+        from base: RemoteProfile,
+        updated: RemoteProfile,
+        current: RemoteProfile
+    ) throws -> RemoteProfile {
+        guard
+            base.id == updated.id,
+            base.id == current.id,
+            base.engineName == updated.engineName,
+            base.engineName == current.engineName,
+            base.createdAt == updated.createdAt,
+            base.createdAt == current.createdAt
+        else {
+            throw concurrentChange("remote identity")
+        }
+
+        let label = "remote “\(base.displayName)”"
+        var merged = current
+        merged.displayName = try mergeValue(base.displayName, updated.displayName, current.displayName, label: label)
+        merged.backendType = try mergeValue(base.backendType, updated.backendType, current.backendType, label: label)
+        merged.options = try mergeOptions(from: base.options, updated: updated.options, current: current.options, label: label)
+        merged.resources = try mergeValue(base.resources, updated.resources, current.resources, label: label)
+        merged.updatedAt = max(updated.updatedAt, current.updatedAt)
+        return merged
+    }
+
+    private static func mergeOptions(
+        from base: [String: String],
+        updated: [String: String],
+        current: [String: String],
+        label: String
+    ) throws -> [String: String] {
+        var merged = current
+        let keys = Set(base.keys).union(updated.keys)
+        for key in keys where updated[key] != base[key] {
+            guard current[key] == base[key] || current[key] == updated[key] else {
+                throw concurrentChange("\(label) option “\(key)”")
+            }
+            if let value = updated[key] {
+                merged[key] = value
+            } else {
+                merged.removeValue(forKey: key)
+            }
+        }
+        return merged
+    }
+
+    private static func mergeMounts(
+        from base: [MountDefinition],
+        updated: [MountDefinition],
+        current: [MountDefinition]
+    ) throws -> [MountDefinition] {
+        let baseByID = Dictionary(uniqueKeysWithValues: base.map { ($0.id, $0) })
+        let updatedByID = Dictionary(uniqueKeysWithValues: updated.map { ($0.id, $0) })
+        var merged = current
+
+        for original in base {
+            guard let draft = updatedByID[original.id] else {
+                merged.removeAll { $0.id == original.id }
+                continue
+            }
+            guard let currentIndex = merged.firstIndex(where: { $0.id == original.id }) else {
+                if draft != original {
+                    throw concurrentChange("mount “\(original.displayName)”")
+                }
+                continue
+            }
+            if draft != original {
+                merged[currentIndex] = try mergeMount(
+                    from: original,
+                    updated: draft,
+                    current: merged[currentIndex]
+                )
+            }
+        }
+
+        for draft in updated where baseByID[draft.id] == nil {
+            if let existing = merged.first(where: { $0.id == draft.id }) {
+                guard existing == draft else { throw concurrentChange("new mount “\(draft.displayName)”") }
+            } else {
+                merged.append(draft)
+            }
+        }
+        return merged
+    }
+
+    private static func mergeMount(
+        from base: MountDefinition,
+        updated: MountDefinition,
+        current: MountDefinition
+    ) throws -> MountDefinition {
+        guard
+            base.id == updated.id,
+            base.id == current.id,
+            base.domainIdentifier == updated.domainIdentifier,
+            base.domainIdentifier == current.domainIdentifier,
+            base.remoteID == updated.remoteID,
+            base.remoteID == current.remoteID
+        else {
+            throw concurrentChange("mount identity")
+        }
+
+        let label = "mount “\(base.displayName)”"
+        var merged = current
+        merged.root = try mergeValue(base.root, updated.root, current.root, label: label)
+        merged.displayName = try mergeValue(base.displayName, updated.displayName, current.displayName, label: label)
+        merged.readOnly = try mergeValue(base.readOnly, updated.readOnly, current.readOnly, label: label)
+        merged.networkPolicy = try mergeValue(base.networkPolicy, updated.networkPolicy, current.networkPolicy, label: label)
+        merged.pollingPolicy = try mergeValue(base.pollingPolicy, updated.pollingPolicy, current.pollingPolicy, label: label)
+        merged.isEnabled = try mergeValue(base.isEnabled, updated.isEnabled, current.isEnabled, label: label)
+        return merged
+    }
+
+    private static func mergeValue<Value: Equatable>(
+        _ base: Value,
+        _ updated: Value,
+        _ current: Value,
+        label: String
+    ) throws -> Value {
+        if updated == base { return current }
+        if current == base || current == updated { return updated }
+        throw concurrentChange(label)
+    }
+
+    private static func concurrentChange(_ label: String) -> VaultStoreError {
+        .mutationRejected("The \(label) changed elsewhere. Review the current value and try again.")
     }
 
     private func persist(_ document: VaultDocument, expectedRevision: UInt64) throws -> VaultSnapshot {

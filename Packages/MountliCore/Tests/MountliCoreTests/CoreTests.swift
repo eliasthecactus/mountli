@@ -128,6 +128,70 @@ import Testing
     }
 }
 
+@Test func staleAppSaveMergesTokenRefreshWithoutRevisionConflict() async throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = EncryptedVaultStore(
+        directory: directory,
+        keyProvider: FixedKeyProvider(data: Data(repeating: 0x71, count: 32))
+    )
+    let remote = RemoteProfile.make(
+        displayName: "OAuth account",
+        backendType: "memory",
+        options: ["token": "original"]
+    )
+    let base = try await store.save(VaultDocument(remotes: [remote]), expectedRevision: 0)
+
+    var appDraft = base.document
+    appDraft.settings.showMenuBarExtra = false
+    appDraft.remotes[0].displayName = "Renamed account"
+    appDraft.remotes[0].updatedAt = .now
+
+    _ = try await store.applyRcloneMutation(
+        RcloneVaultMutation(
+            expectedRevision: base.revision,
+            action: .set,
+            section: remote.engineName,
+            key: "token",
+            value: "refreshed"
+        ))
+    let merged = try await store.saveMergingChanges(appDraft, basedOn: base)
+
+    #expect(merged.document.settings.showMenuBarExtra == false)
+    #expect(merged.document.remotes[0].displayName == "Renamed account")
+    #expect(merged.document.remotes[0].options["token"] == "refreshed")
+}
+
+@Test func staleAppSaveRejectsAnOverlappingOptionEdit() async throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let store = EncryptedVaultStore(
+        directory: directory,
+        keyProvider: FixedKeyProvider(data: Data(repeating: 0x72, count: 32))
+    )
+    let remote = RemoteProfile.make(
+        displayName: "OAuth account",
+        backendType: "memory",
+        options: ["token": "original"]
+    )
+    let base = try await store.save(VaultDocument(remotes: [remote]), expectedRevision: 0)
+    var appDraft = base.document
+    appDraft.remotes[0].options["token"] = "manual"
+    appDraft.remotes[0].updatedAt = .now
+
+    _ = try await store.applyRcloneMutation(
+        RcloneVaultMutation(
+            expectedRevision: base.revision,
+            action: .set,
+            section: remote.engineName,
+            key: "token",
+            value: "refreshed"
+        ))
+    await #expect(throws: VaultStoreError.self) {
+        try await store.saveMergingChanges(appDraft, basedOn: base)
+    }
+}
+
 @Test func sqliteMigratesReconcilesAndKeepsIdentityAcrossRename() async throws {
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: directory) }

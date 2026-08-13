@@ -13,4 +13,12 @@ The first production release is `1.0.0`. Until its signed tag is published, rele
 - Encrypted versioned vault, persistent SQLite operation journal, stable File Provider identities, conflict handling, network policies, managed policy, and manual diagnostics.
 - Persistent Mac menu-bar status, direct Sparkle channel, App Store channel, CI, security scanning, and release automation.
 
+### Changed
+
+- Release archives now include a checksum-verified App Store Connect upload bundle for deferred Transporter or automated delivery.
+
+### Fixed
+
+- Add Remote and error sheets scroll within constrained windows, recurring empty states stay centered, and concurrent vault writers merge non-overlapping changes instead of surfacing revision churn.
+
 [Unreleased]: https://github.com/eliasthecactus/mountli/commits/main

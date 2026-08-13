@@ -1,0 +1,22 @@
+name: Backend compatibility
+about: Report provider-specific setup or behavior changes
+title: "[Backend]: "
+labels: [backend, needs-triage]
+body:
+  - type: input
+    attributes: { label: Backend and provider, placeholder: s3 / MinIO }
+    validations: { required: true }
+  - type: input
+    attributes: { label: MOUNTLI and rclone versions, placeholder: MOUNTLI 1.0.0, rclone 1.75.0 }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Configuration flow or operation that fails }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Sanitized diagnostic codes }
+  - type: checkboxes
+    attributes:
+      label: Safety
+      options:
+        - label: This report contains no credentials, access tokens, keys, endpoints, or sensitive paths.
+          required: true

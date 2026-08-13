@@ -1,0 +1,21 @@
+[tools]
+go = "1.25.12"
+ruby = "3.4.10"
+xcodegen = "2.46.0"
+gitleaks = "8.28.0"
+syft = "1.29.0"
+gh = "2.97.0"
+
+[env]
+GOTOOLCHAIN = "go1.25.12+auto"
+MOUNTLI_RCLONE_VERSION = "v1.75.0"
+MOUNTLI_GOMOBILE_VERSION = "v0.0.0-20260709172247-6129f5bee9d5"
+
+[tasks.bootstrap-go-tools]
+run = [
+  "go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20260709172247-6129f5bee9d5",
+  "go install golang.org/x/vuln/cmd/govulncheck@v1.6.0",
+  "go install github.com/google/go-licenses@v1.6.0",
+  "go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.9.0",
+  "gomobile init"
+]

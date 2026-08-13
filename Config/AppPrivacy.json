@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "product": "MOUNTLI",
+  "declarationVersion": 1,
+  "appStoreConnect": {
+    "dataCollected": false,
+    "tracking": false,
+    "privacyPolicyURL": "https://benavo.ch/privacy",
+    "privacyChoicesURL": null,
+    "manualSubmissionRequired": true
+  },
+  "productFacts": {
+    "developerAccount": false,
+    "developerHostedRelay": false,
+    "analytics": false,
+    "advertising": false,
+    "telemetryUpload": false,
+    "automaticDiagnosticsUpload": false,
+    "userInitiatedDiagnosticsExport": true,
+    "directProviderConnections": true,
+    "localEncryptedConfiguration": true,
+    "appleManagedFileProviderCache": true
+  },
+  "reviewNotes": "Files and credentials are processed solely to connect the device to storage providers selected by the user. MOUNTLI does not transmit data to benavo.ch. User-initiated diagnostics remain on device until the user exports them. App Store Connect detailed App Privacy answers must be set to Data Not Collected manually because Apple provides no documented API for these answers."
+}

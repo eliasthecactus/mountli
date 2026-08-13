@@ -1,0 +1,14 @@
+title = "MOUNTLI secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated build products and vendored binaries"
+paths = [
+  '''^\.build/''',
+  '''^\.build-cache/''',
+  '''^\.bundle/''',
+  '''^DerivedData/''',
+  '''^Packages/MountliCore/Vendor/''',
+]

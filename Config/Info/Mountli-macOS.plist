@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
+<key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+<key>CFBundlePackageType</key><string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+<key>CFBundleDisplayName</key><string>MOUNTLI</string>
+<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
+<key>CFBundleURLTypes</key><array><dict><key>CFBundleURLSchemes</key><array><string>mountli</string></array></dict></array>
+<key>NSFaceIDUsageDescription</key><string>Authenticate before exporting storage configuration.</string>
+<key>NSLocalNetworkUsageDescription</key><string>Connect to storage servers you configure.</string>
+<key>ITSAppUsesNonExemptEncryption</key><true/>
+<key>ITSEncryptionExportComplianceCode</key><string>$(MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE)</string>
+<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+<key>SUFeedURL</key><string>https://github.com/eliasthecactus/mountli/releases/latest/download/appcast.xml</string>
+<key>SUPublicEDKey</key><string>24miphVaiq5InpMk9Njf/suKoQY4ogckzomKR3q9gHU=</string>
+<key>SUEnableAutomaticChecks</key><true/>
+</dict></plist>

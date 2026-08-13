@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /GoBridge
+    schedule: { interval: weekly, day: monday, time: '05:00', timezone: Etc/UTC }
+    groups:
+      rclone-bridge:
+        patterns: ['github.com/rclone/rclone', 'golang.org/x/mobile']
+    labels: [dependencies, go]
+  - package-ecosystem: swift
+    directory: /
+    schedule: { interval: weekly, day: monday, time: '05:15', timezone: Etc/UTC }
+    labels: [dependencies, swift]
+  - package-ecosystem: bundler
+    directory: /
+    schedule: { interval: weekly, day: monday, time: '05:30', timezone: Etc/UTC }
+    labels: [dependencies, release]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday, time: '05:45', timezone: Etc/UTC }
+    labels: [dependencies, automation]

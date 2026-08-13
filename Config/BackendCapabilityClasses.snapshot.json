@@ -1,0 +1,56 @@
+{
+  "classes": [
+    {
+      "name": "readOnly",
+      "representative": "http",
+      "requiredAssertions": [
+        "read"
+      ]
+    },
+    {
+      "name": "objectStore",
+      "representative": "s3",
+      "requiredAssertions": [
+        "read",
+        "write",
+        "directoriesVirtual"
+      ]
+    },
+    {
+      "name": "filesystem",
+      "representative": "sftp",
+      "requiredAssertions": [
+        "read",
+        "write",
+        "directoriesReal"
+      ]
+    },
+    {
+      "name": "webdav",
+      "representative": "webdav",
+      "requiredAssertions": [
+        "read",
+        "write",
+        "serverMoveConfigurationDependent"
+      ]
+    },
+    {
+      "name": "overlay",
+      "representative": "crypt",
+      "requiredAssertions": [
+        "dependencyRequired",
+        "capabilitiesInherited"
+      ]
+    },
+    {
+      "name": "testOnly",
+      "representative": "memory",
+      "requiredAssertions": [
+        "volatile",
+        "releaseHidden"
+      ]
+    }
+  ],
+  "rcloneVersion": "1.75.0",
+  "schemaVersion": 1
+}

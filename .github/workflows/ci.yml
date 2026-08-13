@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      MOUNTLI_IOS_SIMULATOR_DESTINATION: 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.6'
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Install pinned Go helper tools
+        run: mise exec -- mise run bootstrap-go-tools
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: |
+            .build-tools
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('GoBridge/go.sum', '.mise.toml') }}
+      - name: Verify static contracts
+        run: mise exec -- make verify-static
+      - name: Verify Go bridge and Swift behavior
+        run: mise exec -- make test-go test-swift
+      - name: Run credential-free integration fixtures
+        run: mise exec -- make test-integration
+      - name: Run UI launch and executable build matrix
+        run: mise exec -- make test-ui

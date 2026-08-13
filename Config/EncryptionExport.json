@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "product": "MOUNTLI",
+  "classificationVersion": 1,
+  "reviewStatus": "pending",
+  "usesNonExemptEncryption": true,
+  "appleComplianceCodeRequired": true,
+  "appleComplianceCodeSource": "MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE",
+  "cryptography": [
+    {
+      "component": "Apple CryptoKit",
+      "purpose": "AES-GCM protection of the local configuration vault"
+    },
+    {
+      "component": "rclone v1.75.0",
+      "purpose": "TLS, SSH, provider authentication, and user-configured rclone Crypt"
+    },
+    {
+      "component": "Sparkle 2.9.5 direct Mac channel",
+      "purpose": "EdDSA verification of signed update metadata"
+    }
+  ],
+  "releaseRule": "No release archive may be created, uploaded, or verified until Apple or qualified export counsel completes the classification and an Apple-issued compliance code is stored in the protected production environment.",
+  "reviewedAt": null,
+  "reviewedBy": null,
+  "notes": "Conservative pending classification. Never change usesNonExemptEncryption to false solely because standard encryption may qualify for an exemption; record the completed determination first."
+}

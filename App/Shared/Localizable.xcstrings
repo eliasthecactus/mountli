@@ -1,0 +1,749 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%arg" : {
+      "shouldTranslate" : false
+    },
+    "%arg mounts" : {
+      "shouldTranslate" : false
+    },
+    "%arg of %arg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$arg of %2$arg"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "%arg pending operations" : {
+      "shouldTranslate" : false
+    },
+    "%arg · %arg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$arg · %2$arg"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "%arg%arg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$arg%2$arg"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "%arg/s" : {
+      "shouldTranslate" : false
+    },
+    "A verified backup from revision %arg is available." : {
+      "shouldTranslate" : false
+    },
+    "About" : {
+      "shouldTranslate" : false
+    },
+    "Access" : {
+      "shouldTranslate" : false
+    },
+    "Action required notifications" : {
+      "shouldTranslate" : false
+    },
+    "Actions" : {
+      "shouldTranslate" : false
+    },
+    "Active transfers" : {
+      "shouldTranslate" : false
+    },
+    "Activity" : {
+      "shouldTranslate" : false
+    },
+    "Add" : {
+      "shouldTranslate" : false
+    },
+    "Add Mount" : {
+      "shouldTranslate" : false
+    },
+    "Add Remote" : {
+      "shouldTranslate" : false
+    },
+    "Add a Remote" : {
+      "shouldTranslate" : false
+    },
+    "Add a Remote First" : {
+      "shouldTranslate" : false
+    },
+    "After adding a mount, MOUNTLI opens its Finder location." : {
+      "shouldTranslate" : false
+    },
+    "After adding a mount, enable and open its location in Files." : {
+      "shouldTranslate" : false
+    },
+    "All colliding sections are replaced together, or none are changed. Existing mounts using them must be removed first." : {
+      "shouldTranslate" : false
+    },
+    "All configured locations are healthy." : {
+      "shouldTranslate" : false
+    },
+    "All mounts" : {
+      "shouldTranslate" : false
+    },
+    "All rclone backends" : {
+      "shouldTranslate" : false
+    },
+    "Anyone with this file can read the credentials and tokens for the exported remotes." : {
+      "shouldTranslate" : false
+    },
+    "Apple manages downloaded files and disk space. MOUNTLI connects each location directly to its storage provider." : {
+      "shouldTranslate" : false
+    },
+    "Apple manages local downloads, materialization, and disk space. MOUNTLI does not create a second file browser." : {
+      "shouldTranslate" : false
+    },
+    "Apple preserved local data from the removed location. Review it before deleting anything." : {
+      "shouldTranslate" : false
+    },
+    "Back" : {
+      "shouldTranslate" : false
+    },
+    "Backend" : {
+      "shouldTranslate" : false
+    },
+    "Backend access" : {
+      "shouldTranslate" : false
+    },
+    "Base remote" : {
+      "shouldTranslate" : false
+    },
+    "Browse…" : {
+      "shouldTranslate" : false
+    },
+    "Cancel" : {
+      "shouldTranslate" : false
+    },
+    "Cancel Import" : {
+      "shouldTranslate" : false
+    },
+    "Capabilities" : {
+      "shouldTranslate" : false
+    },
+    "Capability check" : {
+      "shouldTranslate" : false
+    },
+    "Cellular access" : {
+      "shouldTranslate" : false
+    },
+    "Changing either password does not re-encrypt existing data and can make it permanently unreadable." : {
+      "shouldTranslate" : false
+    },
+    "Check for Updates…" : {
+      "shouldTranslate" : false
+    },
+    "Choose Local Folder…" : {
+      "shouldTranslate" : false
+    },
+    "Choose Protected Resource…" : {
+      "shouldTranslate" : false
+    },
+    "Choose This Folder" : {
+      "shouldTranslate" : false
+    },
+    "Choose a remote" : {
+      "shouldTranslate" : false
+    },
+    "Choose rclone.conf…" : {
+      "shouldTranslate" : false
+    },
+    "Collisions: %arg" : {
+      "shouldTranslate" : false
+    },
+    "Concurrent transfers" : {
+      "shouldTranslate" : false
+    },
+    "Config password (only if encrypted)" : {
+      "shouldTranslate" : false
+    },
+    "Configuration failed" : {
+      "shouldTranslate" : false
+    },
+    "Confirm passphrase" : {
+      "shouldTranslate" : false
+    },
+    "Connection" : {
+      "shouldTranslate" : false
+    },
+    "Continue" : {
+      "shouldTranslate" : false
+    },
+    "Copy Support Details" : {
+      "shouldTranslate" : false
+    },
+    "Create a File Provider location backed by one of your rclone remotes." : {
+      "shouldTranslate" : false
+    },
+    "Create a remote with rclone’s native setup questions, or import an existing rclone.conf. Every device is configured independently." : {
+      "shouldTranslate" : false
+    },
+    "Credentials and configuration stay encrypted on this device. Files travel directly between your device and the storage services you choose." : {
+      "shouldTranslate" : false
+    },
+    "Credentials are stored only in MOUNTLI’s encrypted local vault." : {
+      "shouldTranslate" : false
+    },
+    "Credentials stay in an encrypted local vault and are never sent to MOUNTLI servers." : {
+      "shouldTranslate" : false
+    },
+    "Crypt remote" : {
+      "shouldTranslate" : false
+    },
+    "Current" : {
+      "shouldTranslate" : false
+    },
+    "Dedicated encrypted root" : {
+      "shouldTranslate" : false
+    },
+    "Default" : {
+      "shouldTranslate" : false
+    },
+    "Default network" : {
+      "shouldTranslate" : false
+    },
+    "Delete" : {
+      "shouldTranslate" : false
+    },
+    "Delete Anyway" : {
+      "shouldTranslate" : false
+    },
+    "Delete Exact Duplicate" : {
+      "shouldTranslate" : false
+    },
+    "Dependencies" : {
+      "shouldTranslate" : false
+    },
+    "Diagnostics" : {
+      "shouldTranslate" : false
+    },
+    "Diagnostics omit credentials, raw options, resource files, and file contents. File names are included only when the toggle above is on." : {
+      "shouldTranslate" : false
+    },
+    "Dirty data was preserved" : {
+      "shouldTranslate" : false
+    },
+    "Display name" : {
+      "shouldTranslate" : false
+    },
+    "Done" : {
+      "shouldTranslate" : false
+    },
+    "Edit" : {
+      "shouldTranslate" : false
+    },
+    "Enable Action Required Alerts" : {
+      "shouldTranslate" : false
+    },
+    "Encrypt directory names" : {
+      "shouldTranslate" : false
+    },
+    "Encrypted configuration cannot be recovered without the original device-only key." : {
+      "shouldTranslate" : false
+    },
+    "Encrypted export" : {
+      "shouldTranslate" : false
+    },
+    "Encryption passwords" : {
+      "shouldTranslate" : false
+    },
+    "Every external file or directory is copied or bookmarked into MOUNTLI’s protected resource store before validation." : {
+      "shouldTranslate" : false
+    },
+    "Export Diagnostics…" : {
+      "shouldTranslate" : false
+    },
+    "Export Selected…" : {
+      "shouldTranslate" : false
+    },
+    "Export credentials as plaintext?" : {
+      "shouldTranslate" : false
+    },
+    "Export encrypted rclone.conf…" : {
+      "shouldTranslate" : false
+    },
+    "Export without encryption…" : {
+      "shouldTranslate" : false
+    },
+    "Export your encrypted configuration first if you need a backup. Reset removes File Provider domains, protected resources, encrypted vault files, and the device-only vault key." : {
+      "shouldTranslate" : false
+    },
+    "File names" : {
+      "shouldTranslate" : false
+    },
+    "Finder & Files Locations" : {
+      "shouldTranslate" : false
+    },
+    "Folder" : {
+      "shouldTranslate" : false
+    },
+    "Format" : {
+      "shouldTranslate" : false
+    },
+    "Free" : {
+      "shouldTranslate" : false
+    },
+    "General" : {
+      "shouldTranslate" : false
+    },
+    "Generated second password" : {
+      "shouldTranslate" : false
+    },
+    "Get Started" : {
+      "shouldTranslate" : false
+    },
+    "Go to Parent" : {
+      "shouldTranslate" : false
+    },
+    "I saved the generated second password" : {
+      "shouldTranslate" : false
+    },
+    "I understand — use plaintext" : {
+      "shouldTranslate" : false
+    },
+    "Import rclone.conf" : {
+      "shouldTranslate" : false
+    },
+    "Import rclone.conf…" : {
+      "shouldTranslate" : false
+    },
+    "Include file names in diagnostics" : {
+      "shouldTranslate" : false
+    },
+    "Insecure TLS options are blocked by the effective security policy." : {
+      "shouldTranslate" : false
+    },
+    "Invalid configuration response" : {
+      "shouldTranslate" : false
+    },
+    "Issues" : {
+      "shouldTranslate" : false
+    },
+    "Keep Remote" : {
+      "shouldTranslate" : false
+    },
+    "Keep encrypted" : {
+      "shouldTranslate" : false
+    },
+    "Last refresh" : {
+      "shouldTranslate" : false
+    },
+    "Launch at login" : {
+      "shouldTranslate" : false
+    },
+    "License & Acknowledgements" : {
+      "shouldTranslate" : false
+    },
+    "License & Acknowledgements…" : {
+      "shouldTranslate" : false
+    },
+    "Loading folders…" : {
+      "shouldTranslate" : false
+    },
+    "Loading mounts…" : {
+      "shouldTranslate" : false
+    },
+    "Location" : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI" : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI couldn’t complete that action" : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop." : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically." : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI parses without mutating the live vault. Imported section names and overlay references remain exact." : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI will relist and match the provider’s stable object ID before renaming anything." : {
+      "shouldTranslate" : false
+    },
+    "MOUNTLI — %arg" : {
+      "shouldTranslate" : false
+    },
+    "Manage" : {
+      "shouldTranslate" : false
+    },
+    "Managed Policy" : {
+      "shouldTranslate" : false
+    },
+    "Managed by your organization" : {
+      "shouldTranslate" : false
+    },
+    "Mount" : {
+      "shouldTranslate" : false
+    },
+    "Mount removed" : {
+      "shouldTranslate" : false
+    },
+    "Mounts" : {
+      "shouldTranslate" : false
+    },
+    "Mount…" : {
+      "shouldTranslate" : false
+    },
+    "Name" : {
+      "shouldTranslate" : false
+    },
+    "Name encryption" : {
+      "shouldTranslate" : false
+    },
+    "Name in Finder & Files" : {
+      "shouldTranslate" : false
+    },
+    "Network" : {
+      "shouldTranslate" : false
+    },
+    "New Mount…" : {
+      "shouldTranslate" : false
+    },
+    "New Remote…" : {
+      "shouldTranslate" : false
+    },
+    "New export passphrase" : {
+      "shouldTranslate" : false
+    },
+    "New name" : {
+      "shouldTranslate" : false
+    },
+    "New second password (leave blank to keep current)" : {
+      "shouldTranslate" : false
+    },
+    "No MOUNTLI account, hosted relay, ads, or telemetry" : {
+      "shouldTranslate" : false
+    },
+    "No active transfers" : {
+      "shouldTranslate" : false
+    },
+    "No issues" : {
+      "shouldTranslate" : false
+    },
+    "No managed overrides are active." : {
+      "shouldTranslate" : false
+    },
+    "No mounts configured" : {
+      "shouldTranslate" : false
+    },
+    "No mounts yet" : {
+      "shouldTranslate" : false
+    },
+    "No recent activity" : {
+      "shouldTranslate" : false
+    },
+    "No remotes yet" : {
+      "shouldTranslate" : false
+    },
+    "Not used by a mount or overlay" : {
+      "shouldTranslate" : false
+    },
+    "Notifications are optional and requested only if you enable alerts for action-required events or completed transfers." : {
+      "shouldTranslate" : false
+    },
+    "OK" : {
+      "shouldTranslate" : false
+    },
+    "Obfuscate" : {
+      "shouldTranslate" : false
+    },
+    "Off" : {
+      "shouldTranslate" : false
+    },
+    "One or more remotes skip normal TLS verification." : {
+      "shouldTranslate" : false
+    },
+    "Open Issues" : {
+      "shouldTranslate" : false
+    },
+    "Open MOUNTLI" : {
+      "shouldTranslate" : false
+    },
+    "Open in Finder" : {
+      "shouldTranslate" : false
+    },
+    "Organization Support" : {
+      "shouldTranslate" : false
+    },
+    "Overview" : {
+      "shouldTranslate" : false
+    },
+    "Pending operations" : {
+      "shouldTranslate" : false
+    },
+    "Plaintext exposes provider credentials to any app or person that can read the file." : {
+      "shouldTranslate" : false
+    },
+    "Popular" : {
+      "shouldTranslate" : false
+    },
+    "Privacy Policy" : {
+      "shouldTranslate" : false
+    },
+    "Protected resource files" : {
+      "shouldTranslate" : false
+    },
+    "Quick actions" : {
+      "shouldTranslate" : false
+    },
+    "Quit" : {
+      "shouldTranslate" : false
+    },
+    "Quota" : {
+      "shouldTranslate" : false
+    },
+    "READ ONLY" : {
+      "shouldTranslate" : false
+    },
+    "Rclone in Finder & Files" : {
+      "shouldTranslate" : false
+    },
+    "Read only" : {
+      "shouldTranslate" : false
+    },
+    "Read only is required by backend capabilities or managed policy." : {
+      "shouldTranslate" : false
+    },
+    "Read-only enforcement" : {
+      "shouldTranslate" : false
+    },
+    "Recent" : {
+      "shouldTranslate" : false
+    },
+    "Reconnect" : {
+      "shouldTranslate" : false
+    },
+    "Refresh" : {
+      "shouldTranslate" : false
+    },
+    "Refresh All" : {
+      "shouldTranslate" : false
+    },
+    "Relink protected resources" : {
+      "shouldTranslate" : false
+    },
+    "Relink…" : {
+      "shouldTranslate" : false
+    },
+    "Remote" : {
+      "shouldTranslate" : false
+    },
+    "Remote subfolder" : {
+      "shouldTranslate" : false
+    },
+    "Remotes" : {
+      "shouldTranslate" : false
+    },
+    "Remote…" : {
+      "shouldTranslate" : false
+    },
+    "Removal is blocked while uploads are pending. Preserved dirty data is revealed in Finder." : {
+      "shouldTranslate" : false
+    },
+    "Removal is blocked while uploads are pending. Removing the location deletes local materializations from Files, not the remote data." : {
+      "shouldTranslate" : false
+    },
+    "Remove Mount" : {
+      "shouldTranslate" : false
+    },
+    "Remove and discard cached copies" : {
+      "shouldTranslate" : false
+    },
+    "Remove and preserve dirty user data" : {
+      "shouldTranslate" : false
+    },
+    "Remove from Files" : {
+      "shouldTranslate" : false
+    },
+    "Remove this mount?" : {
+      "shouldTranslate" : false
+    },
+    "Rename" : {
+      "shouldTranslate" : false
+    },
+    "Rename Exact Duplicate" : {
+      "shouldTranslate" : false
+    },
+    "Rename Mount" : {
+      "shouldTranslate" : false
+    },
+    "Rename exact duplicate" : {
+      "shouldTranslate" : false
+    },
+    "Replace All Collisions" : {
+      "shouldTranslate" : false
+    },
+    "Replace all colliding sections?" : {
+      "shouldTranslate" : false
+    },
+    "Requires action" : {
+      "shouldTranslate" : false
+    },
+    "Reset" : {
+      "shouldTranslate" : false
+    },
+    "Reset MOUNTLI" : {
+      "shouldTranslate" : false
+    },
+    "Reset MOUNTLI…" : {
+      "shouldTranslate" : false
+    },
+    "Reset inaccessible vault" : {
+      "shouldTranslate" : false
+    },
+    "Reset inaccessible vault?" : {
+      "shouldTranslate" : false
+    },
+    "Reset is blocked while any mount has pending or dirty operations." : {
+      "shouldTranslate" : false
+    },
+    "Reset vault and remove locations" : {
+      "shouldTranslate" : false
+    },
+    "Restore" : {
+      "shouldTranslate" : false
+    },
+    "Restore verified backup" : {
+      "shouldTranslate" : false
+    },
+    "Retry" : {
+      "shouldTranslate" : false
+    },
+    "Review in %arg" : {
+      "shouldTranslate" : false
+    },
+    "Root" : {
+      "shouldTranslate" : false
+    },
+    "Saving remote…" : {
+      "shouldTranslate" : false
+    },
+    "Search all backends" : {
+      "shouldTranslate" : false
+    },
+    "Sections" : {
+      "shouldTranslate" : false
+    },
+    "Security" : {
+      "shouldTranslate" : false
+    },
+    "Selected format" : {
+      "shouldTranslate" : false
+    },
+    "Server-side move" : {
+      "shouldTranslate" : false
+    },
+    "Settings" : {
+      "shouldTranslate" : false
+    },
+    "Show advanced questions" : {
+      "shouldTranslate" : false
+    },
+    "Show in Finder" : {
+      "shouldTranslate" : false
+    },
+    "Show status in menu bar" : {
+      "shouldTranslate" : false
+    },
+    "Source Code" : {
+      "shouldTranslate" : false
+    },
+    "Standard" : {
+      "shouldTranslate" : false
+    },
+    "State" : {
+      "shouldTranslate" : false
+    },
+    "Status" : {
+      "shouldTranslate" : false
+    },
+    "Step %arg of 4" : {
+      "shouldTranslate" : false
+    },
+    "Suggestions" : {
+      "shouldTranslate" : false
+    },
+    "Test Connection" : {
+      "shouldTranslate" : false
+    },
+    "The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by MOUNTLI." : {
+      "shouldTranslate" : false
+    },
+    "The primary vault failed its integrity check." : {
+      "shouldTranslate" : false
+    },
+    "This cannot recover or decrypt the previous configuration." : {
+      "shouldTranslate" : false
+    },
+    "Transfer completed notifications" : {
+      "shouldTranslate" : false
+    },
+    "Transfers" : {
+      "shouldTranslate" : false
+    },
+    "Transfers and sync decisions will appear here." : {
+      "shouldTranslate" : false
+    },
+    "Type RESET" : {
+      "shouldTranslate" : false
+    },
+    "Use encrypted export instead" : {
+      "shouldTranslate" : false
+    },
+    "Used" : {
+      "shouldTranslate" : false
+    },
+    "Vault key unavailable" : {
+      "shouldTranslate" : false
+    },
+    "Vault recovery" : {
+      "shouldTranslate" : false
+    },
+    "Version" : {
+      "shouldTranslate" : false
+    },
+    "Write access" : {
+      "shouldTranslate" : false
+    },
+    "rclone" : {
+      "shouldTranslate" : false
+    },
+    "rclone section" : {
+      "shouldTranslate" : false
+    },
+    "rclone.conf" : {
+      "shouldTranslate" : false
+    },
+    "· %argm %args left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "· %1$argm %2$args left"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    }
+  },
+  "version" : "1.2"
+}

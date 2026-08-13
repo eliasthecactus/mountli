@@ -1,0 +1,7 @@
+#include "Base.xcconfig"
+SWIFT_COMPILATION_MODE = wholemodule
+SWIFT_OPTIMIZATION_LEVEL = -O
+ENABLE_HARDENED_RUNTIME = YES
+ITS_APP_USES_NON_EXEMPT_ENCRYPTION = YES
+// Set after Apple review of export documentation; release verification rejects an empty value.
+MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE =

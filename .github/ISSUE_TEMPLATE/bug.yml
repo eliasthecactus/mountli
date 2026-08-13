@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible MOUNTLI problem
+title: "[Bug]: "
+labels: [bug, needs-triage]
+body:
+  - type: checkboxes
+    attributes:
+      label: Safety
+      options:
+        - label: I removed credentials, tokens, private keys, and sensitive filenames.
+          required: true
+        - label: I searched existing issues.
+          required: true
+  - type: input
+    attributes: { label: MOUNTLI version, placeholder: 1.0.0 (1) }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Apple device and OS, placeholder: MacBook Pro, macOS 26.0 }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Backend type, placeholder: sftp, s3, crypt over webdav }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Reproduction steps }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Expected behavior }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Actual behavior and diagnostic codes }
+    validations: { required: true }

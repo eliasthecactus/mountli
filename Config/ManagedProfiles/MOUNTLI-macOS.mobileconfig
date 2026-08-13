@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>PayloadType</key><string>com.apple.ManagedClient.preferences</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.macos.preferences</string>
+      <key>PayloadUUID</key><string>50E5656B-D266-4687-A955-5CB285E22EB9</string>
+      <key>PayloadDisplayName</key><string>MOUNTLI Managed Preferences</string>
+      <key>PayloadContent</key>
+      <dict>
+        <key>ch.benavo.mountli</key>
+        <dict>
+          <key>Forced</key>
+          <array>
+            <dict>
+              <key>mcx_preference_settings</key>
+              <dict>
+                <key>PolicyVersion</key><integer>1</integer>
+                <key>AllowedBackendTypes</key><array><string>webdav</string><string>sftp</string><string>crypt</string></array>
+                <key>AllowConfigImport</key><false/>
+                <key>AllowConfigExport</key><false/>
+                <key>AllowInsecureTLS</key><false/>
+                <key>ForceReadOnly</key><true/>
+                <key>AllowCellular</key><false/>
+                <key>MaximumConcurrentTransfers</key><integer>4</integer>
+                <key>SupportURL</key><string>https://support.example.com/mountli</string>
+              </dict>
+            </dict>
+          </array>
+        </dict>
+      </dict>
+    </dict>
+  </array>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadVersion</key><integer>1</integer>
+  <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.macos</string>
+  <key>PayloadUUID</key><string>83B35426-96BE-457E-92FB-BD3B5259E2CA</string>
+  <key>PayloadDisplayName</key><string>MOUNTLI macOS Managed Policy</string>
+  <key>PayloadOrganization</key><string>Example Organization</string>
+  <key>PayloadDescription</key><string>Example restriction-only MOUNTLI managed preferences profile.</string>
+</dict>
+</plist>

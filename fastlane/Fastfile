@@ -1,0 +1,57 @@
+require "shellwords"
+
+default_platform(:ios)
+
+private_lane :connect_key do
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_content: ENV.fetch("ASC_KEY_CONTENT"),
+    is_key_content_base64: true
+  )
+end
+
+desc "Run the complete local verification matrix"
+lane :verify do
+  sh("make test")
+end
+
+desc "Archive iOS and App Store macOS products"
+lane :archive do |options|
+  version = options[:version] || ENV.fetch("VERSION")
+  build = options[:build] || ENV.fetch("BUILD_NUMBER")
+  sh("./Scripts/archive-app-store.sh #{version.shellescape} #{build.shellescape}")
+end
+
+desc "Upload iOS and macOS builds to App Store Connect"
+lane :upload do
+  sh("./Scripts/verify-app-store-assets.sh")
+  key = connect_key
+  ipa = Dir[".build/app-store/iOS/*.ipa"].first || UI.user_error!("iOS IPA not found")
+  pkg = Dir[".build/app-store/macOS/*.pkg"].first || UI.user_error!("macOS PKG not found")
+  upload_to_testflight(api_key: key, ipa: ipa, skip_waiting_for_build_processing: true)
+  upload_to_app_store(
+    api_key: key,
+    pkg: pkg,
+    skip_binary_upload: false,
+    skip_metadata: false,
+    skip_screenshots: false,
+    overwrite_screenshots: true,
+    primary_category: "Productivity",
+    secondary_category: "Utilities",
+    price_tier: 0,
+    app_rating_config_path: "fastlane/metadata/age_rating.json",
+    run_precheck_before_submit: true,
+    submit_for_review: false,
+    automatic_release: false,
+    app_review_information: {
+      first_name: ENV.fetch("APP_REVIEW_CONTACT_FIRST_NAME"),
+      last_name: ENV.fetch("APP_REVIEW_CONTACT_LAST_NAME"),
+      phone_number: ENV.fetch("APP_REVIEW_CONTACT_PHONE"),
+      email: ENV.fetch("APP_REVIEW_CONTACT_EMAIL"),
+      demo_user: ENV.fetch("APP_REVIEW_WEBDAV_USERNAME"),
+      demo_password: ENV.fetch("APP_REVIEW_WEBDAV_PASSWORD"),
+      notes: ENV.fetch("APP_REVIEW_NOTES")
+    }
+  )
+end

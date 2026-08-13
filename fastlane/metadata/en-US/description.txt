@@ -1,0 +1,13 @@
+MOUNTLI brings your existing cloud and server storage into Finder and Files using rclone and Apple’s File Provider framework.
+
+Configure Google Drive, OneDrive, Dropbox, S3, WebDAV, SFTP, SMB, Crypt, and every backend compiled into the included rclone release. Each mount appears as a normal Finder or Files location, while Apple manages local materialization.
+
+Privacy is the product:
+• No MOUNTLI account
+• No hosted relay
+• No analytics, ads, subscriptions, or paid tier
+• Credentials encrypted on your device
+• Direct connections to storage providers you choose
+• Diagnostics are generated only when you request them
+
+MOUNTLI is free, open source, and built natively for iPhone, iPad, and Mac.

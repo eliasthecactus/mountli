@@ -1,0 +1,23 @@
+name: App Review Fixture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    environment: production
+    runs-on: macos-26
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Reset least-privilege WebDAV review fixture
+        env:
+          APP_REVIEW_WEBDAV_URL: ${{ secrets.APP_REVIEW_WEBDAV_URL }}
+          APP_REVIEW_WEBDAV_USERNAME: ${{ secrets.APP_REVIEW_WEBDAV_USERNAME }}
+          APP_REVIEW_WEBDAV_PASSWORD: ${{ secrets.APP_REVIEW_WEBDAV_PASSWORD }}
+        run: ./Scripts/reset-review-fixture.py

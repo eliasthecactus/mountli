@@ -1,0 +1,380 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUILD_NUMBER: ${{ github.run_number }}
+
+jobs:
+  preflight:
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Import trusted release-tag signing key
+        env:
+          RELEASE_SIGNING_PUBLIC_KEY_BASE64: ${{ vars.RELEASE_SIGNING_PUBLIC_KEY_BASE64 }}
+        run: |
+          : "${RELEASE_SIGNING_PUBLIC_KEY_BASE64:?Configure the trusted release signing public key}"
+          printf '%s' "$RELEASE_SIGNING_PUBLIC_KEY_BASE64" | base64 --decode | gpg --batch --import
+      - name: Verify signed SemVer tag, canonical version, and protected-main ancestry
+        env:
+          MOUNTLI_SKIP_COMPLIANCE_PREFLIGHT: '1'
+        run: ./Scripts/release-preflight.sh "$GITHUB_REF_NAME"
+
+  draft:
+    needs: preflight
+    runs-on: macos-26
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Create signed-tag release as a draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            test "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" = true
+          else
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag --target "$GITHUB_SHA" --generate-notes
+          fi
+
+  quality:
+    needs: [preflight, draft]
+    runs-on: macos-26
+    timeout-minutes: 180
+    env:
+      MOUNTLI_IOS_SIMULATOR_DESTINATION: 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.6'
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Install pinned Go helper tools
+        run: mise exec -- mise run bootstrap-go-tools
+      - name: Full release quality matrix
+        run: mise exec -- make test
+
+  security:
+    needs: [preflight, draft]
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Install pinned Go helper tools
+        run: mise exec -- mise run bootstrap-go-tools
+      - name: License and secret gates
+        run: |
+          mise exec -- ./Scripts/verify-licenses.sh
+          mise exec -- gitleaks git --redact --no-banner .
+          mise exec -- gitleaks dir --redact --no-banner .
+      - name: Generate source SBOMs
+        run: mise exec -- ./Scripts/generate-sboms.sh .build/release-sbom
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-sbom
+          path: .build/release-sbom/*.cdx.json
+          if-no-files-found: error
+          retention-days: 90
+
+  app-store:
+    needs: [preflight, quality, security]
+    environment: production
+    runs-on: macos-26
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.6'
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Install locked Ruby dependencies
+        run: |
+          mise exec -- bundle config set path .bundle
+          mise exec -- bundle config set frozen true
+          mise exec -- bundle install
+      - uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
+        with:
+          p12-file-base64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+      - name: Download iOS host profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download iOS File Provider profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileprovider.ios
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download iOS File Provider UI profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileproviderui.ios
+          profile-type: IOS_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download macOS host profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli
+          profile-type: MAC_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download macOS File Provider profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileprovider.macos
+          profile-type: MAC_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download macOS File Provider UI profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileproviderui.macos
+          profile-type: MAC_APP_STORE
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Validate production release inputs
+        env:
+          MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE: ${{ secrets.MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE }}
+          RELEASE_SIGNING_PUBLIC_KEY_BASE64: ${{ vars.RELEASE_SIGNING_PUBLIC_KEY_BASE64 }}
+        run: |
+          printf '%s' "$RELEASE_SIGNING_PUBLIC_KEY_BASE64" | base64 --decode | gpg --batch --import
+          ./Scripts/release-preflight.sh "$GITHUB_REF_NAME"
+      - name: Archive signed App Store products
+        env:
+          MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE: ${{ secrets.MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE }}
+        run: mise exec -- bundle exec fastlane archive version:"${GITHUB_REF_NAME#v}" build:"$BUILD_NUMBER"
+      - name: Upload to TestFlight and App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          APP_REVIEW_CONTACT_FIRST_NAME: ${{ secrets.APP_REVIEW_CONTACT_FIRST_NAME }}
+          APP_REVIEW_CONTACT_LAST_NAME: ${{ secrets.APP_REVIEW_CONTACT_LAST_NAME }}
+          APP_REVIEW_CONTACT_PHONE: ${{ secrets.APP_REVIEW_CONTACT_PHONE }}
+          APP_REVIEW_CONTACT_EMAIL: ${{ secrets.APP_REVIEW_CONTACT_EMAIL }}
+          APP_REVIEW_WEBDAV_URL: ${{ secrets.APP_REVIEW_WEBDAV_URL }}
+          APP_REVIEW_WEBDAV_USERNAME: ${{ secrets.APP_REVIEW_WEBDAV_USERNAME }}
+          APP_REVIEW_WEBDAV_PASSWORD: ${{ secrets.APP_REVIEW_WEBDAV_PASSWORD }}
+          APP_REVIEW_CAPTURE_URL: ${{ secrets.APP_REVIEW_CAPTURE_URL }}
+        run: |
+          : "${APP_REVIEW_WEBDAV_URL:?Missing protected review fixture URL}"
+          : "${APP_REVIEW_CAPTURE_URL:?Missing entitlement-dependent review capture}"
+          export APP_REVIEW_NOTES="Use WebDAV server ${APP_REVIEW_WEBDAV_URL}. Follow Documentation/AppReview.md: add the supplied WebDAV remote, mount review-fixture, and create/edit/rename/delete a duplicate of Welcome.txt. Entitlement-dependent capture: ${APP_REVIEW_CAPTURE_URL}"
+          mise exec -- bundle exec fastlane upload
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: app-store-${{ github.ref_name }}
+          path: .build/app-store
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove provisioning profiles and transient signing data
+        if: always()
+        run: |
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles"/*.{mobileprovision,provisionprofile}
+          rm -rf .build/app-store/SourcePackages
+
+  direct-mac:
+    if: ${{ vars.DIRECT_MAC_ENABLED == 'true' }}
+    needs: [preflight, quality, security]
+    environment: production
+    runs-on: macos-26
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.6'
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - name: Install pinned release dependencies
+        run: |
+          mise exec -- mise run bootstrap-go-tools
+          mise exec -- bundle config set path .bundle
+          mise exec -- bundle config set frozen true
+          mise exec -- bundle install
+      - uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
+        with:
+          p12-file-base64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+      - name: Download Developer ID host profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli
+          profile-type: MAC_APP_DIRECT
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download Developer ID File Provider profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileprovider.macos
+          profile-type: MAC_APP_DIRECT
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Download Developer ID File Provider UI profile
+        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        with:
+          bundle-id: ch.benavo.mountli.fileproviderui.macos
+          profile-type: MAC_APP_DIRECT
+          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
+          api-key-id: ${{ secrets.ASC_KEY_ID }}
+          api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+      - name: Configure notarization credentials
+        env:
+          NOTARY_KEY_BASE64: ${{ secrets.NOTARY_KEY_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+        run: |
+          : "${NOTARY_KEY_BASE64:?Missing notarization key}"
+          mkdir -p .build
+          printf '%s' "$NOTARY_KEY_BASE64" | base64 --decode > .build/notary.p8
+          chmod 600 .build/notary.p8
+          xcrun notarytool store-credentials mountli-ci --key .build/notary.p8 --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER_ID"
+      - name: Build, notarize, package, and verify direct channel
+        env:
+          NOTARY_KEYCHAIN_PROFILE: mountli-ci
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE: ${{ secrets.MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: mise exec -- ./Scripts/release-direct.sh "${GITHUB_REF_NAME#v}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: direct-mac-${{ github.ref_name }}
+          path: .build/release-direct/releases
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove profiles, credentials, and private key material
+        if: always()
+        run: |
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles"/*.{mobileprovision,provisionprofile}
+          rm -rf .build/notary.p8 .build/release-direct/sparkle-private-key
+          security delete-generic-password -s com.apple.gke.notary.tool -a mountli-ci 2>/dev/null || true
+
+  publish:
+    if: ${{ always() && needs.preflight.result == 'success' && needs.quality.result == 'success' && needs.security.result == 'success' && needs.app-store.result == 'success' && (needs.direct-mac.result == 'success' || needs.direct-mac.result == 'skipped') }}
+    needs: [preflight, draft, quality, security, app-store, direct-mac]
+    environment: production
+    runs-on: macos-26
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
+        with:
+          version: '2026.8.4'
+          cache: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: .build/publish
+      - name: Verify the signed-tag release remains a draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: test "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" = true
+      - name: Stage required source and legal artifacts
+        run: |
+          mkdir -p .build/publish/release-assets
+          cp LICENSE THIRD_PARTY_NOTICES.txt .build/publish/release-assets/
+          tar -czf .build/publish/release-assets/ThirdPartyLicenses.tar.gz ThirdPartyLicenses
+          cp .build/publish/release-sbom/*.cdx.json .build/publish/release-assets/
+          if [[ "${{ needs.direct-mac.result }}" == "success" ]]; then
+            cp .build/publish/direct-mac-*/{MOUNTLI-*.zip,MOUNTLI-*.dmg,appcast.xml,notarization-*.txt} .build/publish/release-assets/
+          fi
+      - name: Attest release assets
+        id: attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-path: .build/publish/release-assets/*
+      - name: Download portable attestation bundles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .build/publish/attestations
+          cd .build/publish/attestations
+          for asset in ../release-assets/*; do gh attestation download "$asset" --repo "$GITHUB_REPOSITORY"; done
+          tar -czf ../release-assets/provenance-attestations.tar.gz .
+          cd ../release-assets
+          rm -f SHA256SUMS
+          shasum -a 256 ./* > SHA256SUMS
+      - name: Upload and verify complete draft assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" .build/publish/release-assets/* --clobber
+          test "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" = true
+          for asset in LICENSE THIRD_PARTY_NOTICES.txt ThirdPartyLicenses.tar.gz SHA256SUMS mountli-go.cdx.json mountli-source.cdx.json provenance-attestations.tar.gz; do
+            gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fxq "$asset"
+          done
+          if [[ "${{ needs.direct-mac.result }}" == "success" ]]; then
+            gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Eq '^MOUNTLI-[0-9]+\.[0-9]+\.[0-9]+\.dmg$'
+            gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Eq '^MOUNTLI-[0-9]+\.[0-9]+\.[0-9]+\.zip$'
+            gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' | grep -Fxq appcast.xml
+          fi
+      - name: Publish only after every gate passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false

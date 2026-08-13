@@ -205,7 +205,7 @@ struct SettingsView: View {
     }
 
     private func binding<Value>(
-        get: @escaping () -> Value,
+        get: @escaping @MainActor @Sendable () -> Value,
         set: @escaping @MainActor (Value) async throws -> Void
     ) -> Binding<Value> {
         Binding(get: get, set: { value in model.run { try await set(value) } })

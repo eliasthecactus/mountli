@@ -73,5 +73,5 @@ jobs:
       - name: Build analyzed products
         run: |
           mise exec -- make generate
-          xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build
+          xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
       - uses: github/codeql-action/analyze@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17

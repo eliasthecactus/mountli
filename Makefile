@@ -103,13 +103,13 @@ verify-release:
 	./Scripts/verify-release.sh "$${RELEASE_CHANNEL}" "$${ARTIFACT_DIR}" "$${VERSION}" "$${ARCHIVE_PATH:-}"
 
 build-macos: generate
-	xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build
+	xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
 
 build-ios: generate
 	xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-iOS -configuration Debug -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 
 build-direct: generate
-	xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS-Direct -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build
+	xcodebuild -project MOUNTLI.xcodeproj -scheme MOUNTLI-macOS-Direct -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
 
 clean:
 	rm -rf .build .build-cache Packages/MountliCore/Vendor/RcloneCore.xcframework

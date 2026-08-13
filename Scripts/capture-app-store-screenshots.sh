@@ -74,7 +74,7 @@ xcodebuild build-for-testing \
   -scheme MOUNTLI-macOS \
   -configuration Debug \
   -derivedDataPath "$DERIVED/DerivedData" \
-  -destination 'platform=macOS,arch=arm64' \
+  -destination 'platform=macOS' \
   -only-testing:MountliUITests-macOS/MountliUITests/testCaptureAppStoreScreenshot \
   CODE_SIGNING_ALLOWED=NO
 run_macos_capture() {
@@ -83,7 +83,7 @@ run_macos_capture() {
     -scheme MOUNTLI-macOS \
     -configuration Debug \
     -derivedDataPath "$DERIVED/DerivedData" \
-    -destination 'platform=macOS,arch=arm64' \
+    -destination 'platform=macOS' \
     -only-testing:MountliUITests-macOS/MountliUITests/testCaptureAppStoreScreenshot \
     -resultBundlePath "$mac_result" \
     CODE_SIGNING_ALLOWED=NO

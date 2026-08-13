@@ -14,6 +14,7 @@ concurrency:
 
 env:
   BUILD_NUMBER: ${{ github.run_number }}
+  APP_STORE_DELIVERY_MODE: ${{ vars.APP_STORE_DELIVERY_MODE }}
 
 jobs:
   preflight:
@@ -133,6 +134,12 @@ jobs:
           mise exec -- bundle config set path .bundle
           mise exec -- bundle config set frozen true
           mise exec -- bundle install
+      - name: Validate App Store delivery mode
+        run: |
+          case "${APP_STORE_DELIVERY_MODE:-artifact}" in
+            artifact|upload) ;;
+            *) echo "APP_STORE_DELIVERY_MODE must be artifact or upload" >&2; exit 1 ;;
+          esac
       - uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
         with:
           p12-file-base64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
@@ -196,7 +203,15 @@ jobs:
         env:
           MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE: ${{ secrets.MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE }}
         run: mise exec -- bundle exec fastlane archive version:"${GITHUB_REF_NAME#v}" build:"$BUILD_NUMBER"
-      - name: Upload to TestFlight and App Store Connect
+      - name: Verify upload-ready App Store Connect bundle
+        run: |
+          test -s .build/app-store-upload/UPLOAD.txt
+          test -s .build/app-store-upload/SHA256SUMS.txt
+          test "$(find .build/app-store-upload -maxdepth 1 -name '*.ipa' -type f | wc -l | tr -d ' ')" = 1
+          test "$(find .build/app-store-upload -maxdepth 1 -name '*.pkg' -type f | wc -l | tr -d ' ')" = 1
+          (cd .build/app-store-upload && shasum -a 256 -c SHA256SUMS.txt)
+      - name: Upload binaries and metadata to App Store Connect
+        if: ${{ vars.APP_STORE_DELIVERY_MODE == 'upload' }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -216,10 +231,10 @@ jobs:
           mise exec -- bundle exec fastlane upload
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: app-store-${{ github.ref_name }}
-          path: .build/app-store
+          name: app-store-connect-upload-${{ github.ref_name }}
+          path: .build/app-store-upload
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
       - name: Remove provisioning profiles and transient signing data
         if: always()
         run: |

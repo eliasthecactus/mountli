@@ -45,7 +45,7 @@ struct AppRootView: View {
         }
         .task {
             if ProcessInfo.processInfo.arguments.contains("-MOUNTLIScreenshotFixture") {
-                model.isLoading = false
+                model.installInterfaceTestFixture()
             } else {
                 await model.bootstrap()
                 await model.monitorActivity()
@@ -205,16 +205,17 @@ struct ContentView: View {
         }
         .sheet(isPresented: $model.showingAddMount) { MountWizard(model: model) }
         .sheet(isPresented: $model.showingConfigImport) { ConfigImportFlow(model: model) }
-        .alert(
-            "MOUNTLI couldn’t complete that action",
+        .sheet(
             isPresented: Binding(
                 get: { model.presentedError != nil },
                 set: { if !$0 { model.presentedError = nil } }
             )
         ) {
-            Button("OK", role: .cancel) { model.presentedError = nil }
-        } message: {
-            Text(model.presentedError ?? "Unknown error")
+            ActionFailureView(
+                title: "MOUNTLI couldn’t complete that action",
+                message: model.presentedError ?? "Unknown error",
+                dismiss: { model.presentedError = nil }
+            )
         }
         #if os(macOS)
             .alert(
@@ -657,48 +658,63 @@ struct ActivityView: View {
         }
     }
 
+    private var pendingCount: Int {
+        model.operationalStates.values.reduce(0) { $0 + $1.pendingOperations }
+    }
     var body: some View {
-        List {
-            Section("Current") {
-                if active.isEmpty { Text("No active transfers").foregroundStyle(.secondary) }
-                ForEach(active) { operation in
-                    ActiveOperationRow(model: model, operation: operation)
-                }
-                LabeledContent("Pending operations", value: "\(model.operationalStates.values.reduce(0) { $0 + $1.pendingOperations })")
-            }
-            Section("Recent") {
-                if model.recentOperations.isEmpty {
-                    ContentUnavailableView("No recent activity", systemImage: "clock", description: Text("Transfers and sync decisions will appear here."))
-                } else {
-                    ForEach(model.recentOperations.filter { $0.outcome != .running && $0.outcome != .pending }) { operation in
-                        HStack {
-                            Button {
-                                model.requestedOperationID = operation.id
-                            } label: {
+        Group {
+            if model.recentOperations.isEmpty && pendingCount == 0 {
+                ContentUnavailableView(
+                    "No recent activity",
+                    systemImage: "clock",
+                    description: Text("Transfers and sync decisions will appear here.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityIdentifier("activity-empty-state")
+            } else {
+                List {
+                    Section("Current") {
+                        if active.isEmpty { Text("No active transfers").foregroundStyle(.secondary) }
+                        ForEach(active) { operation in
+                            ActiveOperationRow(model: model, operation: operation)
+                        }
+                        LabeledContent("Pending operations", value: "\(pendingCount)")
+                    }
+                    Section("Recent") {
+                        if model.recentOperations.filter({ $0.outcome != .running && $0.outcome != .pending }).isEmpty {
+                            Text("No completed activity").foregroundStyle(.secondary)
+                        } else {
+                            ForEach(model.recentOperations.filter { $0.outcome != .running && $0.outcome != .pending }) { operation in
                                 HStack {
-                                    Image(systemName: operation.kind.systemImage)
-                                        .foregroundStyle(operation.outcome == .failed ? .red : Color.mountliEmerald)
-                                        .frame(width: 28)
-                                    VStack(alignment: .leading) {
-                                        Text(operation.kind.label)
-                                        Text(operation.startedAt, style: .relative).font(.caption).foregroundStyle(.secondary)
+                                    Button {
+                                        model.requestedOperationID = operation.id
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: operation.kind.systemImage)
+                                                .foregroundStyle(operation.outcome == .failed ? .red : Color.mountliEmerald)
+                                                .frame(width: 28)
+                                            VStack(alignment: .leading) {
+                                                Text(operation.kind.label)
+                                                Text(operation.startedAt, style: .relative).font(.caption).foregroundStyle(.secondary)
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                    Spacer()
+                                    if operation.outcome == .retryableFailure,
+                                        let mount = model.mounts.first(where: { $0.id == operation.mountID })
+                                    {
+                                        Button("Retry") { model.run { try await model.refresh(mount) } }
+                                        if let issue = issue(for: operation) {
+                                            Button("View Issue") {
+                                                model.requestedIssueID = issue.id
+                                                model.requestedSection = "Issues"
+                                            }
+                                        }
+                                    } else {
+                                        Text(operation.outcome.label).font(.caption.bold()).foregroundStyle(.secondary)
                                     }
                                 }
-                            }
-                            .buttonStyle(.plain)
-                            Spacer()
-                            if operation.outcome == .retryableFailure,
-                                let mount = model.mounts.first(where: { $0.id == operation.mountID })
-                            {
-                                Button("Retry") { model.run { try await model.refresh(mount) } }
-                                if let issue = issue(for: operation) {
-                                    Button("View Issue") {
-                                        model.requestedIssueID = issue.id
-                                        model.requestedSection = "Issues"
-                                    }
-                                }
-                            } else {
-                                Text(operation.outcome.label).font(.caption.bold()).foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -842,69 +858,85 @@ struct IssuesView: View {
     @State private var confirmingVaultReset = false
     @State private var renamingIssue: IssueRecord?
     @State private var duplicateRename = ""
+
+    private var hasNoIssues: Bool {
+        model.durableIssues.isEmpty
+            && model.domainIssues.isEmpty
+            && model.policyIssues.isEmpty
+            && model.vaultRecoveryCandidate == nil
+            && !model.vaultResetRequired
+            && model.operationalStates.values.allSatisfy { $0.lastErrorCode == nil }
+    }
     var body: some View {
-        List {
-            if model.durableIssues.isEmpty && model.domainIssues.isEmpty && model.policyIssues.isEmpty && model.vaultRecoveryCandidate == nil
-                && !model.vaultResetRequired && model.operationalStates.values.allSatisfy({ $0.lastErrorCode == nil })
-            {
-                ContentUnavailableView("No issues", systemImage: "checkmark.shield", description: Text("All configured locations are healthy."))
+        Group {
+            if hasNoIssues {
+                ContentUnavailableView(
+                    "No issues",
+                    systemImage: "checkmark.shield",
+                    description: Text("All configured locations are healthy.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityIdentifier("issues-empty-state")
             } else {
-                if let candidate = model.vaultRecoveryCandidate {
-                    Section("Vault recovery") {
-                        Label("The primary vault failed its integrity check.", systemImage: "lock.trianglebadge.exclamationmark").foregroundStyle(.red)
-                        Text("A verified backup from revision \(candidate.revision) is available.").font(.caption).foregroundStyle(.secondary)
-                        Button("Restore verified backup") { model.run { try await model.restoreVaultBackup() } }
-                    }
-                }
-                if model.vaultResetRequired {
-                    Section("Vault key unavailable") {
-                        Text("Encrypted configuration cannot be recovered without the original device-only key.")
-                        Button("Reset inaccessible vault", role: .destructive) { confirmingVaultReset = true }
-                    }
-                }
-                ForEach(model.durableIssues) { issue in
-                    let mount = issue.mountID.flatMap { id in model.mounts.first { $0.id == id } }
-                    IssueCard(
-                        title: issue.message,
-                        code: issue.diagnosticCode,
-                        mount: mount,
-                        model: model,
-                        createdAt: issue.createdAt,
-                        remotePath: issue.remotePath,
-                        redactedPathToken: issue.redactedPathToken
-                    ) {
-                        ForEach(issue.suggestedActions, id: \.self) { action in
-                            resolutionButton(issue, action: action)
+                List {
+                    if let candidate = model.vaultRecoveryCandidate {
+                        Section("Vault recovery") {
+                            Label("The primary vault failed its integrity check.", systemImage: "lock.trianglebadge.exclamationmark").foregroundStyle(.red)
+                            Text("A verified backup from revision \(candidate.revision) is available.").font(.caption).foregroundStyle(.secondary)
+                            Button("Restore verified backup") { model.run { try await model.restoreVaultBackup() } }
                         }
                     }
-                }
-                ForEach(model.domainIssues, id: \.self) { issue in
-                    if issue.hasPrefix("missing:"), let mount = model.mounts.first(where: { issue.hasSuffix($0.domainIdentifier) }) {
-                        IssueCard(title: "\(mount.displayName) is missing from Finder & Files", code: "DOMAIN_MISSING", mount: mount, model: model) {
-                            Button("Restore") { model.run { try await model.restoreDomain(mount) } }
+                    if model.vaultResetRequired {
+                        Section("Vault key unavailable") {
+                            Text("Encrypted configuration cannot be recovered without the original device-only key.")
+                            Button("Reset inaccessible vault", role: .destructive) { confirmingVaultReset = true }
                         }
-                    } else {
-                        IssueCard(title: "Unrecognized File Provider domain", code: issue, mount: nil, model: model) { EmptyView() }
                     }
-                }
-                ForEach(model.policyIssues) { issue in
-                    IssueCard(
-                        title: issue.impact, code: issue.diagnosticCode, mount: issue.mountID.flatMap { id in model.mounts.first { $0.id == id } }, model: model
-                    ) { EmptyView() }
-                }
-                ForEach(Array(model.operationalStates.values), id: \.mountID) { state in
-                    if let code = state.lastErrorCode,
-                        !model.durableIssues.contains(where: { $0.mountID == state.mountID && $0.diagnosticCode == code }),
-                        let mount = model.mounts.first(where: { $0.id == state.mountID })
-                    {
-                        IssueCard(title: issueImpact(code), code: code, mount: mount, model: model) {
-                            if let remote = model.remotes.first(where: { $0.id == mount.remoteID }), code.localizedCaseInsensitiveContains("auth") {
-                                Button("Reconnect") { model.run { try await model.reconnect(remote) } }
-                            } else {
-                                Button("Retry") { model.run { try await model.refresh(mount) } }
+                    ForEach(model.durableIssues) { issue in
+                        let mount = issue.mountID.flatMap { id in model.mounts.first { $0.id == id } }
+                        IssueCard(
+                            title: issue.message,
+                            code: issue.diagnosticCode,
+                            mount: mount,
+                            model: model,
+                            createdAt: issue.createdAt,
+                            remotePath: issue.remotePath,
+                            redactedPathToken: issue.redactedPathToken
+                        ) {
+                            ForEach(issue.suggestedActions, id: \.self) { action in
+                                resolutionButton(issue, action: action)
                             }
-                            if code.localizedCaseInsensitiveContains("conflict") || code.localizedCaseInsensitiveContains("duplicate") {
-                                Button("Review in \(Self.filesLabel)") { model.run { try await model.reveal(mount) } }
+                        }
+                    }
+                    ForEach(model.domainIssues, id: \.self) { issue in
+                        if issue.hasPrefix("missing:"), let mount = model.mounts.first(where: { issue.hasSuffix($0.domainIdentifier) }) {
+                            IssueCard(title: "\(mount.displayName) is missing from Finder & Files", code: "DOMAIN_MISSING", mount: mount, model: model) {
+                                Button("Restore") { model.run { try await model.restoreDomain(mount) } }
+                            }
+                        } else {
+                            IssueCard(title: "Unrecognized File Provider domain", code: issue, mount: nil, model: model) { EmptyView() }
+                        }
+                    }
+                    ForEach(model.policyIssues) { issue in
+                        IssueCard(
+                            title: issue.impact, code: issue.diagnosticCode, mount: issue.mountID.flatMap { id in model.mounts.first { $0.id == id } },
+                            model: model
+                        ) { EmptyView() }
+                    }
+                    ForEach(Array(model.operationalStates.values), id: \.mountID) { state in
+                        if let code = state.lastErrorCode,
+                            !model.durableIssues.contains(where: { $0.mountID == state.mountID && $0.diagnosticCode == code }),
+                            let mount = model.mounts.first(where: { $0.id == state.mountID })
+                        {
+                            IssueCard(title: issueImpact(code), code: code, mount: mount, model: model) {
+                                if let remote = model.remotes.first(where: { $0.id == mount.remoteID }), code.localizedCaseInsensitiveContains("auth") {
+                                    Button("Reconnect") { model.run { try await model.reconnect(remote) } }
+                                } else {
+                                    Button("Retry") { model.run { try await model.refresh(mount) } }
+                                }
+                                if code.localizedCaseInsensitiveContains("conflict") || code.localizedCaseInsensitiveContains("duplicate") {
+                                    Button("Review in \(Self.filesLabel)") { model.run { try await model.reveal(mount) } }
+                                }
                             }
                         }
                     }

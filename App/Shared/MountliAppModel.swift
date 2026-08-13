@@ -104,6 +104,22 @@ final class MountliAppModel {
         }
     }
 
+    func installInterfaceTestFixture() {
+        let fixtureCatalog = """
+            [
+              {"name":"sftp","description":"SFTP","aliases":["ssh"],"options":[],"testOnly":false,"overlay":false},
+              {"name":"crypt","description":"Crypt","aliases":["encrypted"],"options":[],"testOnly":false,"overlay":true}
+            ]
+            """
+        catalog =
+            (try? JSONDecoder().decode([ProviderDescriptor].self, from: Data(fixtureCatalog.utf8)))
+            ?? []
+        fullCatalog = catalog
+        let remote = RemoteProfile.make(displayName: "Fixture Storage", backendType: "sftp")
+        snapshot = VaultSnapshot(revision: 1, document: VaultDocument(remotes: [remote]))
+        isLoading = false
+    }
+
     func bootstrap() async {
         isLoading = true
         defer { isLoading = false }
@@ -219,9 +235,10 @@ final class MountliAppModel {
     }
 
     func setShowMenuBarExtra(_ enabled: Bool) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.settings.showMenuBarExtra = enabled
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setLaunchAtLogin(_ enabled: Bool) async throws {
@@ -232,37 +249,42 @@ final class MountliAppModel {
                 try await SMAppService.mainApp.unregister()
             }
         #endif
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.settings.launchAtLogin = enabled
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setMaximumConcurrentTransfers(_ value: Int) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         #if os(macOS)
             document.settings.maximumConcurrentTransfersMacOS = min(max(value, 1), 8)
         #else
             document.settings.maximumConcurrentTransfersIOS = min(max(value, 1), 4)
         #endif
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setDefaultNetworkPolicy(_ policy: NetworkPolicy) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.settings.defaultNetworkPolicy = managedPolicy.allowCellular ? policy : .wifiOnly
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setNotificationSettings(_ notifications: NotificationSettings) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.settings.notifications = notifications
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setIncludeFilenamesInDiagnostics(_ enabled: Bool) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.settings.includeFilenamesInDiagnostics = enabled
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     var effectiveMaximumConcurrentTransfers: Int {
@@ -424,9 +446,10 @@ final class MountliAppModel {
         resources: [ManagedResourceReference] = [],
         replacing id: UUID? = nil
     ) async throws {
+        let base = snapshot
         refreshManagedPolicy()
         let existingForPolicy = id.flatMap { remoteID in
-            snapshot.document.remotes.first { $0.id == remoteID }
+            base.document.remotes.first { $0.id == remoteID }
         }
         let candidateID = existingForPolicy?.id ?? UUID()
         let secureOptions = try RemoteIdentityPolicy.secureOptions(
@@ -444,8 +467,7 @@ final class MountliAppModel {
             updatedAt: .now
         )
         try managedPolicy.requireRemoteAccess(candidate)
-        var document = snapshot.document
-        var originalRemote: RemoteProfile?
+        var document = base.document
         let runtimeOptions: [String: String]
         if let resourceStore {
             runtimeOptions = try await resourceStore.materializeOptions(secureOptions, resources: resources)
@@ -454,7 +476,6 @@ final class MountliAppModel {
         }
         if let id, let index = document.remotes.firstIndex(where: { $0.id == id }) {
             let existing = document.remotes[index]
-            originalRemote = existing
             let updated = RemoteProfile(
                 id: existing.id,
                 engineName: existing.engineName,
@@ -525,63 +546,7 @@ final class MountliAppModel {
             document.remotes.append(candidate)
             _ = try RemoteDependencyGraph(remotes: document.remotes)
         }
-        do {
-            try await commit(document)
-        } catch VaultStoreError.revisionConflict {
-            guard
-                let id,
-                let originalRemote,
-                let draft = document.remotes.first(where: { $0.id == id }),
-                let vault
-            else { throw VaultStoreError.notFound }
-            let latest = try await vault.load()
-            var mergedDocument = latest.document
-            guard let latestIndex = mergedDocument.remotes.firstIndex(where: { $0.id == id }) else {
-                throw VaultStoreError.mutationRejected("Edited remote was deleted during configuration")
-            }
-            var merged = mergedDocument.remotes[latestIndex]
-            let optionKeys = Set(originalRemote.options.keys).union(draft.options.keys)
-            for key in optionKeys where originalRemote.options[key] != draft.options[key] {
-                let latestValue = merged.options[key]
-                guard latestValue == originalRemote.options[key] || latestValue == draft.options[key] else {
-                    throw VaultStoreError.mutationRejected(
-                        "The option “\(key)” changed while this remote was being edited."
-                    )
-                }
-                if let value = draft.options[key] {
-                    merged.options[key] = value
-                } else {
-                    merged.options.removeValue(forKey: key)
-                }
-            }
-            if draft.displayName != originalRemote.displayName {
-                guard merged.displayName == originalRemote.displayName || merged.displayName == draft.displayName else {
-                    throw VaultStoreError.mutationRejected("The remote name changed while it was being edited.")
-                }
-                merged.displayName = draft.displayName
-            }
-            if draft.backendType != originalRemote.backendType {
-                guard merged.backendType == originalRemote.backendType || merged.backendType == draft.backendType else {
-                    throw VaultStoreError.mutationRejected("The backend changed while this remote was being edited.")
-                }
-                merged.backendType = draft.backendType
-            }
-            if draft.resources != originalRemote.resources {
-                guard merged.resources == originalRemote.resources || merged.resources == draft.resources else {
-                    throw VaultStoreError.mutationRejected(
-                        "Managed resources changed while this remote was being edited."
-                    )
-                }
-                merged.resources = draft.resources
-            }
-            merged.updatedAt = .now
-            refreshManagedPolicy()
-            try managedPolicy.requireRemoteAccess(merged)
-            mergedDocument.remotes[latestIndex] = merged
-            _ = try RemoteDependencyGraph(remotes: mergedDocument.remotes)
-            snapshot = try await vault.save(mergedDocument, expectedRevision: latest.revision)
-            try await loadSnapshotIntoRclone()
-        }
+        try await commit(document, basedOn: base)
     }
 
     func importConfigurationResource(
@@ -702,6 +667,7 @@ final class MountliAppModel {
         resourcesByEngineName: [String: [ManagedResourceReference]] = [:],
         collisionPolicy: ImportedRemoteCollisionPolicy = .cancel
     ) async throws {
+        let base = snapshot
         refreshManagedPolicy()
         guard managedPolicy.allowConfigImport else {
             throw ManagedPolicyRestriction.configImportDisabled
@@ -729,7 +695,7 @@ final class MountliAppModel {
                 userInfo: [NSLocalizedDescriptionKey: "Import cancelled because section names already exist."]
             )
         }
-        var document = snapshot.document
+        var document = base.document
         var replacedResources: [ManagedResourceReference] = []
         if collisionPolicy == .replaceAll {
             let collisionSet = Set(collisions)
@@ -795,7 +761,7 @@ final class MountliAppModel {
             }
         }
         let validationOrder = try graph.topologicalOrder().filter { validationNames.contains($0) }
-        let original = snapshot
+        let original = base
         do {
             try await validateDraft(document, order: validationOrder)
             refreshManagedPolicy()
@@ -807,7 +773,7 @@ final class MountliAppModel {
                     try managedPolicy.requireRemoteAccess(remote)
                 }
             }
-            try await commit(document)
+            try await commit(document, basedOn: base)
             await discardConfigurationResources(replacedResources)
         } catch {
             if let vault, let latest = try? await vault.load() {
@@ -848,7 +814,8 @@ final class MountliAppModel {
     }
 
     func deleteRemote(_ remote: RemoteProfile) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         let graph = try RemoteDependencyGraph(remotes: document.remotes)
         try graph.assertCanDelete(remote.engineName)
         let mounted = document.mounts.filter { $0.remoteID == remote.id }.map(\.displayName)
@@ -856,7 +823,7 @@ final class MountliAppModel {
             throw DependencyGraphError.remoteInUse(remote: remote.engineName, dependents: mounted)
         }
         document.remotes.removeAll { $0.id == remote.id }
-        try await commit(document)
+        try await commit(document, basedOn: base)
         await discardConfigurationResources(remote.resources)
     }
 
@@ -867,8 +834,9 @@ final class MountliAppModel {
         readOnly: Bool,
         localDirectory: URL? = nil
     ) async throws {
+        let base = snapshot
         refreshManagedPolicy()
-        var document = snapshot.document
+        var document = base.document
         guard let remoteIndex = document.remotes.firstIndex(where: { $0.id == remoteID }) else {
             throw NSError(domain: "ch.benavo.mountli", code: 1, userInfo: [NSLocalizedDescriptionKey: "The selected remote no longer exists."])
         }
@@ -910,12 +878,12 @@ final class MountliAppModel {
                 root: mountRoot,
                 displayName: name,
                 readOnly: readOnly || managedPolicy.forceReadOnly,
-                networkPolicy: snapshot.document.settings.defaultNetworkPolicy,
+                networkPolicy: base.document.settings.defaultNetworkPolicy,
                 pollingPolicy: .automatic,
                 isEnabled: true
             )
             document.mounts.append(mount)
-            try await commit(document)
+            try await commit(document, basedOn: base)
             let state = MountOperationalState(mountID: mount.id, status: .connecting)
             do {
                 try await domains.add(mount)
@@ -927,14 +895,15 @@ final class MountliAppModel {
                     repository: stateStore,
                     preserveDirtyUserData: false
                 )
-                var rollback = snapshot.document
+                let rollbackBase = snapshot
+                var rollback = rollbackBase.document
                 rollback.mounts.removeAll { $0.id == mount.id }
                 if let importedResource,
                     let index = rollback.remotes.firstIndex(where: { $0.id == remoteID })
                 {
                     rollback.remotes[index].resources.removeAll { $0.id == importedResource.id }
                 }
-                try? await commit(rollback)
+                try? await commit(rollback, basedOn: rollbackBase)
                 throw error
             }
         } catch {
@@ -955,11 +924,12 @@ final class MountliAppModel {
             repository: stateStore,
             preserveDirtyUserData: preserveDirtyData
         )
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         document.mounts.removeAll { $0.id == mount.id }
         let previousState = operationalStates.removeValue(forKey: mount.id)
         do {
-            try await commit(document)
+            try await commit(document, basedOn: base)
         } catch {
             try? await domains.add(mount)
             if let previousState { operationalStates[mount.id] = previousState }
@@ -1076,21 +1046,23 @@ final class MountliAppModel {
         guard !mounts.contains(where: { $0.id != mount.id && $0.displayName.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }) else {
             throw DomainRegistryError.unavailable("Another mount already uses this name.")
         }
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         guard let index = document.mounts.firstIndex(where: { $0.id == mount.id }) else {
             throw VaultStoreError.notFound
         }
         document.mounts[index].displayName = trimmed
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func setMountNetworkPolicy(_ policy: NetworkPolicy, mount: MountDefinition) async throws {
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         guard let index = document.mounts.firstIndex(where: { $0.id == mount.id }) else {
             throw VaultStoreError.notFound
         }
         document.mounts[index].networkPolicy = managedPolicy.allowCellular ? policy : .wifiOnly
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func cancelOperation(_ operation: OperationRecord) async {
@@ -1146,7 +1118,8 @@ final class MountliAppModel {
         guard let resourceStore else { throw VaultStoreError.notFound }
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        var document = snapshot.document
+        let base = snapshot
+        var document = base.document
         guard let remoteIndex = document.remotes.firstIndex(where: { $0.id == remoteID }),
             let resourceIndex = document.remotes[remoteIndex].resources.firstIndex(where: { $0.id == referenceID })
         else { throw ResourceStoreError.missing(referenceID) }
@@ -1156,7 +1129,7 @@ final class MountliAppModel {
         }
         let updated = try await resourceStore.relink(old, to: url, fileProviderStorageURLs: [])
         document.remotes[remoteIndex].resources[resourceIndex] = updated
-        try await commit(document)
+        try await commit(document, basedOn: base)
     }
 
     func resetMountli() async throws {
@@ -1288,9 +1261,9 @@ final class MountliAppModel {
         }
     }
 
-    private func commit(_ document: VaultDocument) async throws {
+    private func commit(_ document: VaultDocument, basedOn base: VaultSnapshot) async throws {
         guard let vault else { throw VaultStoreError.notFound }
-        snapshot = try await vault.save(document, expectedRevision: snapshot.revision)
+        snapshot = try await vault.saveMergingChanges(document, basedOn: base)
         try await loadSnapshotIntoRclone()
         refreshManagedPolicy()
     }

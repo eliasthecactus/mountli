@@ -16,7 +16,7 @@
       "purpose": "TLS, SSH, provider authentication, and user-configured rclone Crypt"
     },
     {
-      "component": "Sparkle 2.9.5 direct Mac channel",
+      "component": "Sparkle 2.10.0 direct Mac channel",
       "purpose": "EdDSA verification of signed update metadata"
     }
   ],

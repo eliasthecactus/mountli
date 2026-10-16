@@ -54,7 +54,7 @@ jobs:
           p12-file-base64: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_PASSWORD }}
       - name: Download exact macOS development host profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli
           profile-type: MAC_APP_DEVELOPMENT
@@ -62,7 +62,7 @@ jobs:
           api-key-id: ${{ secrets.ASC_KEY_ID }}
           api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
       - name: Download exact macOS development File Provider profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli.fileprovider.macos
           profile-type: MAC_APP_DEVELOPMENT
@@ -70,7 +70,7 @@ jobs:
           api-key-id: ${{ secrets.ASC_KEY_ID }}
           api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
       - name: Download exact macOS development File Provider UI profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli.fileproviderui.macos
           profile-type: MAC_APP_DEVELOPMENT

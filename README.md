@@ -31,7 +31,7 @@ make test
 
 Generated binary artifacts, including `RcloneCore.xcframework`, are not committed.
 
-The `MOUNTLI-macOS` and `MOUNTLI-iOS` schemes are App Store products. `MOUNTLI-macOS-Direct` is a separately identified Developer ID product with Sparkle 2.9.5 updates. Signed distribution additionally requires exact App Group-enabled profiles and the scoped secrets listed in `Documentation/Release.md`. Every production tag packages upload-ready iOS IPA and Mac App Store PKG files as a private Actions artifact; the repository delivery-mode variable selects automatic App Store Connect upload or deferred Transporter upload.
+The `MOUNTLI-macOS` and `MOUNTLI-iOS` schemes are App Store products. `MOUNTLI-macOS-Direct` is a separately identified Developer ID product with Sparkle 2.10.0 updates. Signed distribution additionally requires exact App Group-enabled profiles and the scoped secrets listed in `Documentation/Release.md`. Every production tag packages upload-ready iOS IPA and Mac App Store PKG files as a private Actions artifact; the repository delivery-mode variable selects automatic App Store Connect upload or deferred Transporter upload.
 
 ## Security and privacy
 

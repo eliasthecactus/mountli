@@ -24,4 +24,4 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Sparkle also includes bsdiff/bspatch, sais-lite, Ed25519, and SUSignatureVerifier components under permissive BSD, MIT-style, and zlib-style terms. The complete upstream notice is distributed with Sparkle 2.9.5 at https://github.com/sparkle-project/Sparkle/blob/2.9.5/LICENSE.
+Sparkle also includes bsdiff/bspatch, sais-lite, Ed25519, and SUSignatureVerifier components under permissive BSD, MIT-style, and zlib-style terms. The complete upstream notice is distributed with Sparkle 2.10.0 at https://github.com/sparkle-project/Sparkle/blob/2.10.0/LICENSE.

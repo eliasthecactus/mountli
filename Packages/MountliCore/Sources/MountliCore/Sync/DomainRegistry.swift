@@ -123,6 +123,14 @@ public actor DomainRegistry {
         }
     }
 
+    /// Removes a MOUNTLI-owned domain that no longer has a matching mount definition.
+    public func removeOrphan(identifier: String) async throws {
+        guard identifier.hasPrefix("mountli."),
+            let domain = try await installedDomains().first(where: { $0.identifier.rawValue == identifier })
+        else { return }
+        _ = try await removeDomain(domain, preserveDirtyUserData: true)
+    }
+
     public func userVisibleRoot(for mount: MountDefinition) async throws -> URL {
         let domain = makeDomain(mount)
         guard let manager = NSFileProviderManager(for: domain) else {

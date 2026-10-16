@@ -53,7 +53,7 @@ struct MountliMacApp: App {
                 if let menuBarSymbol {
                     Image(systemName: menuBarSymbol)
                 } else {
-                    Image("MountliMark").renderingMode(.template)
+                    Image(nsImage: Self.menuBarMark)
                 }
             }
         }
@@ -65,6 +65,15 @@ struct MountliMacApp: App {
                 .tint(.mountliEmerald)
         }
     }
+
+    /// The mark is a 256-unit SVG with no intrinsic size; menu bar labels ignore SwiftUI frames,
+    /// so it has to be sized as an NSImage or it renders at full size in the menu bar.
+    private static let menuBarMark: NSImage = {
+        let image = (NSImage(named: "MountliMark")?.copy() as? NSImage) ?? NSImage()
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = true
+        return image
+    }()
 
     private var menuBarSymbol: String? {
         if model.operationalStates.values.contains(where: { $0.activeTransfers > 0 }) { return "arrow.up.arrow.down.circle" }

@@ -32,9 +32,12 @@ struct MountliMark: View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
                 .fill(Color.mountliEmerald.gradient)
-            Image(systemName: "externaldrive.connected.to.line.below")
-                .font(.system(size: size * 0.48, weight: .semibold))
+            Image("MountliMark")
+                .renderingMode(.template)
+                .resizable()
+                .scaledToFit()
                 .foregroundStyle(.white)
+                .padding(size * 0.2)
         }
         .frame(width: size, height: size)
         .accessibilityHidden(true)

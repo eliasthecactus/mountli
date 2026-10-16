@@ -362,7 +362,10 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Mountli")
-            .safeAreaInset(edge: .top) { brandHeader }
+            #if os(macOS)
+                // iOS already shows the navigation title above the sidebar.
+                .safeAreaInset(edge: .top) { brandHeader }
+            #endif
         } detail: {
             // Each section gets its own stack so mount and remote rows can push their detail views.
             NavigationStack {
@@ -435,15 +438,14 @@ struct ContentView: View {
     }
 
     private var brandHeader: some View {
-        HStack(spacing: 10) {
-            MountliMark(size: 32)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Mountli").font(.headline)
-                Text("Rclone in Finder & Files").font(.caption).foregroundStyle(.secondary)
-            }
+        HStack(spacing: 8) {
+            MountliMark(size: 22)
+            Text("Mountli").font(.headline)
             Spacer()
         }
-        .padding(.horizontal).padding(.top, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
     }
 }
 

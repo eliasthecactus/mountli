@@ -105,7 +105,7 @@ jobs:
           mise exec -- gitleaks dir --redact --no-banner .
       - name: Generate source SBOMs
         run: mise exec -- ./Scripts/generate-sboms.sh .build/release-sbom
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-sbom
           path: .build/release-sbom/*.cdx.json
@@ -229,7 +229,7 @@ jobs:
           : "${APP_REVIEW_CAPTURE_URL:?Missing entitlement-dependent review capture}"
           export APP_REVIEW_NOTES="Use WebDAV server ${APP_REVIEW_WEBDAV_URL}. Follow Documentation/AppReview.md: add the supplied WebDAV remote, mount review-fixture, and create/edit/rename/delete a duplicate of Welcome.txt. Entitlement-dependent capture: ${APP_REVIEW_CAPTURE_URL}"
           mise exec -- bundle exec fastlane upload
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: app-store-connect-upload-${{ github.ref_name }}
           path: .build/app-store-upload
@@ -311,7 +311,7 @@ jobs:
           MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE: ${{ secrets.MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE }}
           BUILD_NUMBER: ${{ github.run_number }}
         run: mise exec -- ./Scripts/release-direct.sh "${GITHUB_REF_NAME#v}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: direct-mac-${{ github.ref_name }}
           path: .build/release-direct/releases

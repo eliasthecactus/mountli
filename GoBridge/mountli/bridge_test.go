@@ -737,6 +737,12 @@ func TestCancelInterruptsTransferWithinTwoSeconds(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer done()
+	// A real provider body aborts a blocked read when its request context is
+	// cancelled; without this the copy loop can already be parked in the pipe
+	// read and observe a clean EOF instead of the cancellation.
+	stopAbort := context.AfterFunc(ctx, func() { _ = reader.CloseWithError(ctx.Err()) })
+	defer stopAbort()
+	defer writer.Close()
 	result := make(chan error, 1)
 	go func() {
 		_, copyErr := writeDownloadStage(file, &contextReader{ctx: ctx, reader: reader}, "cancel-latency", 0, -1)
@@ -747,7 +753,6 @@ func TestCancelInterruptsTransferWithinTwoSeconds(t *testing.T) {
 	}
 	started := time.Now()
 	Cancel("cancel-latency")
-	_ = writer.Close()
 	select {
 	case copyErr := <-result:
 		if copyErr == nil {

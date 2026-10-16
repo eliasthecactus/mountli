@@ -13,7 +13,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    environment: nightly
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.secrets.outputs.configured }}
+    steps:
+      - name: Check signed smoke secrets
+        id: secrets
+        env:
+          CERTIFICATE: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_BASE64 }}
+          API_KEY: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+        run: |
+          if [[ -n "$CERTIFICATE" && -n "$API_KEY" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Signed smoke secrets are not configured in the nightly environment; skipping."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
   smoke:
+    needs: preflight
+    if: needs.preflight.outputs.configured == 'true'
     environment: nightly
     runs-on: macos-26
     timeout-minutes: 120
@@ -33,7 +54,7 @@ jobs:
           p12-file-base64: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_PASSWORD }}
       - name: Download exact macOS development host profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli
           profile-type: MAC_APP_DEVELOPMENT
@@ -41,7 +62,7 @@ jobs:
           api-key-id: ${{ secrets.ASC_KEY_ID }}
           api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
       - name: Download exact macOS development File Provider profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli.fileprovider.macos
           profile-type: MAC_APP_DEVELOPMENT
@@ -49,7 +70,7 @@ jobs:
           api-key-id: ${{ secrets.ASC_KEY_ID }}
           api-private-key: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
       - name: Download exact macOS development File Provider UI profile
-        uses: apple-actions/download-provisioning-profiles@7fa56f793274ba880be33b875dae5fe62519bc11 # v4.0.1
+        uses: apple-actions/download-provisioning-profiles@2126b5f86a0e2863cbf4d2d312112b22b943a594 # v6.1.0
         with:
           bundle-id: ch.benavo.mountli.fileproviderui.macos
           profile-type: MAC_APP_DEVELOPMENT

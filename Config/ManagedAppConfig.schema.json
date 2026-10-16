@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://benavo.ch/apps/mountli/managed/ManagedAppConfig.schema.json",
-  "title": "MOUNTLI Managed App Configuration",
+  "title": "Mountli Managed App Configuration",
   "description": "Restriction-only managed preferences read from com.apple.configuration.managed.",
   "type": "object",
   "additionalProperties": false,

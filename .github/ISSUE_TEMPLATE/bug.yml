@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible MOUNTLI problem
+description: Report a reproducible Mountli problem
 title: "[Bug]: "
 labels: [bug, needs-triage]
 body:
@@ -12,7 +12,7 @@ body:
         - label: I searched existing issues.
           required: true
   - type: input
-    attributes: { label: MOUNTLI version, placeholder: 1.0.0 (1) }
+    attributes: { label: Mountli version, placeholder: 1.0.0 (1) }
     validations: { required: true }
   - type: input
     attributes: { label: Apple device and OS, placeholder: MacBook Pro, macOS 26.0 }

@@ -18,7 +18,7 @@ struct MountliMacApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("MOUNTLI", id: "main") {
+        WindowGroup("Mountli", id: "main") {
             AppRootView(model: model)
                 .frame(minWidth: 850, minHeight: 560)
                 .onOpenURL(perform: model.handleRecoveryURL)
@@ -29,7 +29,7 @@ struct MountliMacApp: App {
                 Button("New Remote…") { model.showingAddRemote = true }.keyboardShortcut("n", modifiers: .command)
                 Button("New Mount…") { model.showingAddMount = true }.keyboardShortcut("n", modifiers: [.command, .shift]).disabled(model.remotes.isEmpty)
             }
-            CommandMenu("MOUNTLI") {
+            CommandMenu("Mountli") {
                 Button("Refresh All") { model.run { try await model.refreshAll() } }.keyboardShortcut("r", modifiers: .command)
                 Button("Activity") { model.requestedSection = "Activity" }.keyboardShortcut("a", modifiers: [.command, .option])
                 Button("Issues") { model.requestedSection = "Issues" }.keyboardShortcut("i", modifiers: [.command, .shift])
@@ -48,12 +48,12 @@ struct MountliMacApp: App {
             MenuStatusView(model: model)
         } label: {
             Label {
-                Text("MOUNTLI — \(model.overallStatus.label)")
+                Text(model.mounts.isEmpty ? "Mountli" : "Mountli — \(model.overallStatus.label)")
             } icon: {
                 if let menuBarSymbol {
                     Image(systemName: menuBarSymbol)
                 } else {
-                    Image("MountliMark").renderingMode(.template)
+                    Image(nsImage: Self.menuBarMark)
                 }
             }
         }
@@ -65,6 +65,15 @@ struct MountliMacApp: App {
                 .tint(.mountliEmerald)
         }
     }
+
+    /// The mark is a 256-unit SVG with no intrinsic size; menu bar labels ignore SwiftUI frames,
+    /// so it has to be sized as an NSImage or it renders at full size in the menu bar.
+    private static let menuBarMark: NSImage = {
+        let image = (NSImage(named: "MountliMark")?.copy() as? NSImage) ?? NSImage()
+        image.size = NSSize(width: 18, height: 18)
+        image.isTemplate = true
+        return image
+    }()
 
     private var menuBarSymbol: String? {
         if model.operationalStates.values.contains(where: { $0.activeTransfers > 0 }) { return "arrow.up.arrow.down.circle" }
@@ -87,7 +96,13 @@ private struct MenuStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label(model.overallStatus.label, systemImage: model.overallStatus.systemImage).font(.headline)
+                if model.mounts.isEmpty {
+                    Label("Mountli", systemImage: "externaldrive").font(.headline)
+                } else {
+                    Label(model.overallStatus.label, systemImage: model.overallStatus.systemImage)
+                        .font(.headline)
+                        .foregroundStyle(model.overallStatus.tint)
+                }
                 Spacer()
                 if issueCount > 0 {
                     Button {
@@ -104,7 +119,14 @@ private struct MenuStatusView: View {
             }
             Divider()
             if model.mounts.isEmpty {
-                Text("No mounts configured").foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No mounts yet").foregroundStyle(.secondary)
+                    Button("Add a Mount…") {
+                        openWindow(id: "main")
+                        NSApplication.shared.activate()
+                        if model.remotes.isEmpty { model.showingAddRemote = true } else { model.showingAddMount = true }
+                    }
+                }
             } else {
                 ScrollView {
                     VStack(spacing: 8) {
@@ -135,7 +157,7 @@ private struct MenuStatusView: View {
                 ForEach(active.prefix(4)) { operation in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(operation.kind.rawValue.capitalized)
+                            Text(operation.kind.label)
                             Spacer()
                             Button(model.cancellationRequestedIDs.contains(operation.id) ? "Requested" : "Cancel", role: .destructive) {
                                 Task { await model.cancelOperation(operation) }
@@ -154,7 +176,7 @@ private struct MenuStatusView: View {
                 Button("Refresh All", systemImage: "arrow.clockwise") { model.run { try await model.refreshAll() } }.disabled(model.mounts.isEmpty)
             }
             HStack {
-                Button("Open MOUNTLI") {
+                Button("Open Mountli") {
                     openWindow(id: "main")
                     NSApplication.shared.activate()
                 }

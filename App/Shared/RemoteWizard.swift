@@ -62,6 +62,42 @@ struct RemoteWizard: View {
         }
     }
 
+    private var showingCatalog: Bool { step == nil && selected == nil }
+
+    private var trimmedDisplayName: String { displayName.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    @ViewBuilder private var primaryButton: some View {
+        if let step, step.status != .complete, let option = step.option {
+            Button(working ? "Checking…" : "Continue") { submit(step) }
+                .disabled(option.required && answer.isEmpty || working)
+        } else if step == nil, let selected {
+            if selected.name == "crypt" {
+                Button(working ? "Checking…" : "Continue") { startCrypt(selected) }
+                    .accessibilityIdentifier("crypt-continue")
+                    .disabled(
+                        trimmedDisplayName.isEmpty
+                            || cryptBaseEngineName.isEmpty
+                            || editing == nil && (cryptPassword.count < 12 || !cryptPasswordAcknowledged)
+                            || working
+                    )
+            } else {
+                Button(working ? "Starting…" : "Continue") { start(selected) }
+                    .disabled(trimmedDisplayName.isEmpty || working)
+            }
+        }
+    }
+
+    private func providerHeader(_ provider: ProviderDescriptor, subtitle: String) -> some View {
+        HStack(spacing: 14) {
+            ProviderCardIcon(type: provider.name, size: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(provider.description).font(.headline)
+                Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
     private var activeResourceRequirementKind: String? {
         guard let optionName = step?.option?.name, let backendType = selected?.name else { return nil }
         return model.resourceRequirementKind(optionName: optionName, backendType: backendType)
@@ -79,6 +115,9 @@ struct RemoteWizard: View {
                 }
             }
             .navigationTitle(editing == nil ? "Add Remote" : "Edit Remote")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -86,6 +125,13 @@ struct RemoteWizard: View {
                         dismiss()
                     }
                 }
+                if editing == nil, selected != nil, step == nil {
+                    ToolbarItem(placement: .navigation) {
+                        Button("Back", systemImage: "chevron.backward") { selected = nil }
+                            .disabled(working)
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) { primaryButton }
             }
         }
         .task {
@@ -94,12 +140,13 @@ struct RemoteWizard: View {
             }
         }
         #if os(macOS)
+            // The provider catalog needs room for its grid; the form steps are compact.
             .frame(
-                minWidth: 620,
-                idealWidth: 720,
+                minWidth: showingCatalog ? 620 : 500,
+                idealWidth: showingCatalog ? 720 : 560,
                 maxWidth: 900,
-                minHeight: 620,
-                idealHeight: 760,
+                minHeight: showingCatalog ? 600 : 420,
+                idealHeight: showingCatalog ? 720 : 540,
                 maxHeight: 900
             )
         #else
@@ -186,28 +233,38 @@ struct RemoteWizard: View {
 
     private func naming(_ provider: ProviderDescriptor) -> some View {
         Form {
-            Section("Remote") {
-                LabeledContent("Backend", value: provider.description)
-                TextField("Display name", text: $displayName)
-                Toggle("Show advanced questions", isOn: $advanced)
+            Section {
+                providerHeader(
+                    provider,
+                    subtitle: editing == nil ? "rclone will ask a few questions next." : "Review the connection settings step by step."
+                )
             }
             Section {
-                Label("Credentials are stored only in MOUNTLI’s encrypted local vault.", systemImage: "lock.shield")
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-            Section {
-                Button("Continue") { start(provider) }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || working)
+                LabeledContent("Name") {
+                    TextField("Name", text: $displayName, prompt: Text(provider.description))
+                        .labelsHidden()
+                        .multilineTextAlignment(.trailing)
+                        .onSubmit { if !trimmedDisplayName.isEmpty { start(provider) } }
+                }
+                Toggle("Show advanced options", isOn: $advanced)
+            } footer: {
+                Label("Credentials are stored only in Mountli’s encrypted vault on this device.", systemImage: "lock.shield")
             }
         }
+        .formStyle(.grouped)
     }
 
     private func cryptNaming(_ provider: ProviderDescriptor) -> some View {
         Form {
+            Section {
+                providerHeader(provider, subtitle: "Encrypts file contents and names on top of another remote.")
+            }
             Section("Crypt remote") {
-                LabeledContent("Backend", value: provider.description)
-                TextField("Display name", text: $displayName)
+                LabeledContent("Name") {
+                    TextField("Name", text: $displayName, prompt: Text(provider.description))
+                        .labelsHidden()
+                        .multilineTextAlignment(.trailing)
+                }
                 Picker("Base remote", selection: $cryptBaseEngineName) {
                     Text("Choose a remote").tag("")
                     ForEach(model.remotes.filter { $0.id != editing?.id }) { remote in
@@ -263,18 +320,8 @@ struct RemoteWizard: View {
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
             }
-            Section {
-                Button("Continue") { startCrypt(provider) }
-                    .buttonStyle(.borderedProminent)
-                    .accessibilityIdentifier("crypt-continue")
-                    .disabled(
-                        displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            || cryptBaseEngineName.isEmpty
-                            || editing == nil && (cryptPassword.count < 12 || !cryptPasswordAcknowledged)
-                            || working
-                    )
-            }
         }
+        .formStyle(.grouped)
         .sheet(isPresented: $showingCryptBrowser) {
             if let base = model.remotes.first(where: { $0.engineName == cryptBaseEngineName }) {
                 RemoteFolderPicker(model: model, remote: base, selection: $cryptRoot)
@@ -328,7 +375,12 @@ struct RemoteWizard: View {
             ProgressView("Saving remote…").task { await finish(step) }
         } else if let option = step.option {
             Form {
-                Section(option.required ? "Required" : "Configuration") {
+                if let provider = selected {
+                    Section {
+                        providerHeader(provider, subtitle: option.required ? "Required setting" : "Optional setting")
+                    }
+                }
+                Section {
                     if option.exclusive, !option.examples.isEmpty {
                         Picker(option.name, selection: $answer) {
                             if !option.required { Text("Default").tag("") }
@@ -353,16 +405,16 @@ struct RemoteWizard: View {
                             showingResourceImporter = true
                         }
                     }
-                    if !option.help.isEmpty {
-                        Text(option.help)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
                     if let message = step.message, !message.isEmpty {
                         Label(message, systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote)
                             .foregroundStyle(.red)
+                    }
+                } header: {
+                    Text(option.name.replacingOccurrences(of: "_", with: " ").capitalized)
+                } footer: {
+                    if !option.help.isEmpty {
+                        Text(option.help).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 if !option.examples.isEmpty, !option.exclusive {
@@ -385,12 +437,8 @@ struct RemoteWizard: View {
                         }
                     }
                 }
-                Section {
-                    Button("Continue") { submit(step) }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(option.required && answer.isEmpty || working)
-                }
             }
+            .formStyle(.grouped)
             .onAppear { if answer.isEmpty { answer = option.defaultValue } }
             .onChange(of: step.state) { _, _ in answer = step.option?.defaultValue ?? "" }
         } else {
@@ -489,10 +537,25 @@ struct RemoteWizard: View {
 
 private struct ProviderCardIcon: View {
     let type: String
+    var size: CGFloat = 30
+
+    private var symbol: String {
+        switch type {
+        case "crypt": "lock.fill"
+        case "sftp", "ftp", "smb", "webdav", "http", "nfs", "hdfs": "server.rack"
+        case "s3", "b2", "azureblob", "azurefiles", "swift", "gcs", "oracleobjectstorage", "qingstor", "storj": "shippingbox.fill"
+        case "local": "internaldrive.fill"
+        case "alias", "union", "combine", "chunker", "compress", "hasher", "cache": "square.stack.3d.up.fill"
+        case "protondrive": "shield.lefthalf.filled"
+        default: "cloud.fill"
+        }
+    }
+
     var body: some View {
-        Image(systemName: type == "crypt" ? "lock.fill" : type.contains("sftp") || type == "smb" ? "server.rack" : "cloud.fill")
+        Image(systemName: symbol)
+            .font(.system(size: size * 0.45, weight: .semibold))
             .foregroundStyle(Color.mountliEmerald)
-            .frame(width: 30, height: 30)
-            .background(Color.mountliEmerald.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+            .frame(width: size, height: size)
+            .background(Color.mountliEmerald.opacity(0.12), in: RoundedRectangle(cornerRadius: size * 0.27, style: .continuous))
     }
 }

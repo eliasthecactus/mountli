@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "product": "MOUNTLI",
+  "product": "Mountli",
   "classificationVersion": 1,
   "reviewStatus": "pending",
   "usesNonExemptEncryption": true,
@@ -12,11 +12,11 @@
       "purpose": "AES-GCM protection of the local configuration vault"
     },
     {
-      "component": "rclone v1.75.0",
+      "component": "rclone v1.75.2",
       "purpose": "TLS, SSH, provider authentication, and user-configured rclone Crypt"
     },
     {
-      "component": "Sparkle 2.9.5 direct Mac channel",
+      "component": "Sparkle 2.10.0 direct Mac channel",
       "purpose": "EdDSA verification of signed update metadata"
     }
   ],

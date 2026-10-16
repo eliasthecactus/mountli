@@ -7,7 +7,7 @@ body:
     attributes: { label: Backend and provider, placeholder: s3 / MinIO }
     validations: { required: true }
   - type: input
-    attributes: { label: MOUNTLI and rclone versions, placeholder: MOUNTLI 1.0.0, rclone 1.75.0 }
+    attributes: { label: MOUNTLI and rclone versions, placeholder: MOUNTLI 1.0.0, rclone 1.75.2 }
     validations: { required: true }
   - type: textarea
     attributes: { label: Configuration flow or operation that fails }

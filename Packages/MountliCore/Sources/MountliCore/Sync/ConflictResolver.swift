@@ -39,7 +39,7 @@ public enum ConflictResolver {
         formatter.timeZone = .current
         formatter.dateFormat = "yyyy-MM-dd HHmmss"
         let operationSuffix = operationID.uuidString.lowercased().replacingOccurrences(of: "-", with: "").prefix(6)
-        let suffix = " (conflict from MOUNTLI \(formatter.string(from: now)) \(operationSuffix))"
+        let suffix = " (conflict from Mountli \(formatter.string(from: now)) \(operationSuffix))"
         guard !isDirectory else { return displayName + suffix }
         let url = URL(fileURLWithPath: displayName)
         let fileExtension = url.pathExtension

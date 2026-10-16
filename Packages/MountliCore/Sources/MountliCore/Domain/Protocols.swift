@@ -225,6 +225,17 @@ public enum ItemRepositoryError: Error, Equatable, Sendable {
     case enumerationLeaseLost(UUID?)
 }
 
+extension ItemRepositoryError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .itemNotFound: "The item no longer exists."
+        case .syncAnchorExpired: "The change history expired. Finder or Files will reload this location."
+        case .removalInProgress: "This mount is being removed."
+        case .enumerationLeaseLost: "Another process is refreshing this location. Try again shortly."
+        }
+    }
+}
+
 public enum JournalChangeKind: String, Equatable, Sendable {
     case create
     case update

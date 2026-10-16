@@ -220,6 +220,11 @@ final class MountliAppModel {
         domainIssues.removeAll { $0 == "missing:\(mount.domainIdentifier)" }
     }
 
+    func removeOrphanDomain(_ identifier: String) async throws {
+        try await domains.removeOrphan(identifier: identifier)
+        domainIssues.removeAll { $0 == "orphan:\(identifier)" }
+    }
+
     func resetVaultAfterKeyLoss() async throws {
         guard vaultResetRequired, let vault else {
             throw VaultStoreError.mutationRejected("Vault reset is not currently available")
@@ -307,7 +312,7 @@ final class MountliAppModel {
         await configuration.cancelConfiguration(sessionID: sessionID)
     }
 
-    func refreshActivity() async {
+    func refreshActivity(presentingErrors: Bool = true) async {
         guard let stateStore else { return }
         let activityScanStarted = Date()
         do {
@@ -339,7 +344,8 @@ final class MountliAppModel {
             )
             UserDefaults.standard.set(activityScanStarted, forKey: Self.notificationCheckpointKey)
         } catch {
-            presentedError = error.localizedDescription
+            appLogger?.error(code: "ACTIVITY_REFRESH_FAILED", message: String(describing: type(of: error)), path: nil)
+            if presentingErrors { presentedError = error.localizedDescription }
         }
     }
 
@@ -353,13 +359,13 @@ final class MountliAppModel {
             } catch {
                 return
             }
-            await refreshActivity()
+            await refreshActivity(presentingErrors: false)
         }
     }
 
     func clearActivityHistory() async throws {
         guard let stateStore else {
-            throw DomainRegistryError.unavailable("Operational state is not loaded")
+            throw DomainRegistryError.unavailable("Mountli is still starting up. Try again in a moment.")
         }
         _ = try await stateStore.clearCompletedOperationHistory()
         requestedOperationID = nil
@@ -376,7 +382,7 @@ final class MountliAppModel {
             for issue in issues {
                 let mount = issue.mountID.flatMap { id in mounts.first { $0.id == id } }
                 let content = UNMutableNotificationContent()
-                content.title = mount.map { "\($0.displayName) needs attention" } ?? "MOUNTLI needs attention"
+                content.title = mount.map { "\($0.displayName) needs attention" } ?? "Mountli needs attention"
                 content.body = issue.message
                 content.sound = .default
                 content.threadIdentifier = issue.mountID.map { "mount-\($0.uuidString.lowercased())" } ?? "mountli"
@@ -422,7 +428,7 @@ final class MountliAppModel {
             if stateStore == nil {
                 await bootstrap()
             } else {
-                await refreshActivity()
+                await refreshActivity(presentingErrors: false)
                 domainIssues = (try? await domains.reconcile(mounts: mounts) { _ in false }) ?? domainIssues
             }
         }
@@ -433,8 +439,9 @@ final class MountliAppModel {
             do {
                 try BGTaskScheduler.shared.submit(request)
             } catch {
-                let message = "Background refresh could not be scheduled: \(error.localizedDescription)"
-                if !domainIssues.contains(message) { domainIssues.append(message) }
+                // Expected on Simulator and when Background App Refresh is off; the app still
+                // refreshes whenever it is opened, so this is not something the user must fix.
+                appLogger?.info("background refresh unavailable: \(String(describing: type(of: error)))")
             }
         }
     #endif
@@ -834,6 +841,7 @@ final class MountliAppModel {
         readOnly: Bool,
         localDirectory: URL? = nil
     ) async throws {
+        let name = try validatedMountName(name, excluding: nil)
         let base = snapshot
         refreshManagedPolicy()
         var document = base.document
@@ -868,7 +876,7 @@ final class MountliAppModel {
         defer { scopedURL?.stopAccessingSecurityScopedResource() }
         do {
             guard let stateStore else {
-                throw DomainRegistryError.unavailable("Operational state is not loaded")
+                throw DomainRegistryError.unavailable("Mountli is still starting up. Try again in a moment.")
             }
             refreshManagedPolicy()
             try managedPolicy.requireRemoteAccess(remote)
@@ -917,7 +925,7 @@ final class MountliAppModel {
     @discardableResult
     func removeMount(_ mount: MountDefinition, preserveDirtyData: Bool = true) async throws -> URL? {
         guard let stateStore else {
-            throw DomainRegistryError.unavailable("Operational state is not loaded")
+            throw DomainRegistryError.unavailable("Mountli is still starting up. Try again in a moment.")
         }
         let preserved = try await domains.remove(
             mount,
@@ -1039,13 +1047,7 @@ final class MountliAppModel {
     }
 
     func renameMount(_ mount: MountDefinition, to displayName: String) async throws {
-        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            throw DomainRegistryError.unavailable("Enter a name for this mount.")
-        }
-        guard !mounts.contains(where: { $0.id != mount.id && $0.displayName.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }) else {
-            throw DomainRegistryError.unavailable("Another mount already uses this name.")
-        }
+        let trimmed = try validatedMountName(displayName, excluding: mount.id)
         let base = snapshot
         var document = base.document
         guard let index = document.mounts.firstIndex(where: { $0.id == mount.id }) else {
@@ -1053,6 +1055,19 @@ final class MountliAppModel {
         }
         document.mounts[index].displayName = trimmed
         try await commit(document, basedOn: base)
+        // Re-adding a domain with an existing identifier updates the name Finder and Files show.
+        try await domains.add(document.mounts[index])
+    }
+
+    private func validatedMountName(_ proposed: String, excluding mountID: UUID?) throws -> String {
+        let trimmed = proposed.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw DomainRegistryError.unavailable("Enter a name for this mount.")
+        }
+        guard !mounts.contains(where: { $0.id != mountID && $0.displayName.localizedCaseInsensitiveCompare(trimmed) == .orderedSame }) else {
+            throw DomainRegistryError.unavailable("Another mount already uses the name “\(trimmed)”.")
+        }
+        return trimmed
     }
 
     func setMountNetworkPolicy(_ policy: NetworkPolicy, mount: MountDefinition) async throws {
@@ -1146,7 +1161,11 @@ final class MountliAppModel {
         snapshot = try await vault.save(VaultDocument(), expectedRevision: 0)
         operationalStates.removeAll()
         recentOperations.removeAll()
+        durableIssues.removeAll()
         domainIssues.removeAll()
+        cancellationRequestedIDs.removeAll()
+        requestedOperationID = nil
+        requestedIssueID = nil
         try await reloadRclone(snapshot)
         refreshManagedPolicy()
     }
@@ -1235,7 +1254,7 @@ final class MountliAppModel {
         let diagnosticSnapshot = DiagnosticSnapshot(
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             buildNumber: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
-            rcloneVersion: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.0",
+            rcloneVersion: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.2",
             deviceClass: deviceClass,
             policy: managedPolicy,
             mounts: diagnosticMounts,
@@ -1262,6 +1281,9 @@ final class MountliAppModel {
     }
 
     private func commit(_ document: VaultDocument, basedOn base: VaultSnapshot) async throws {
+        // SwiftUI bindings (menu bar insertion, toggles, pickers) write back unchanged values,
+        // sometimes before bootstrap has opened the vault; those must not surface an error.
+        guard document != base.document else { return }
         guard let vault else { throw VaultStoreError.notFound }
         snapshot = try await vault.saveMergingChanges(document, basedOn: base)
         try await loadSnapshotIntoRclone()

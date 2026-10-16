@@ -28,7 +28,7 @@ struct MountEntityQuery: EntityQuery {
 
 struct RefreshMountIntent: AppIntent {
     static let title: LocalizedStringResource = "Refresh Mount"
-    static let description = IntentDescription("Ask Files or Finder to refresh a MOUNTLI location.")
+    static let description = IntentDescription("Ask Files or Finder to refresh a Mountli location.")
 
     @Parameter(title: "Mount") var mount: MountEntity
 
@@ -40,7 +40,7 @@ struct RefreshMountIntent: AppIntent {
 
 struct PauseMountIntent: AppIntent {
     static let title: LocalizedStringResource = "Pause Mount"
-    static let description = IntentDescription("Pause new remote work for a MOUNTLI location without removing cached files.")
+    static let description = IntentDescription("Pause new remote work for a Mountli location without removing cached files.")
 
     @Parameter(title: "Mount") var mount: MountEntity
 
@@ -52,7 +52,7 @@ struct PauseMountIntent: AppIntent {
 
 struct ResumeMountIntent: AppIntent {
     static let title: LocalizedStringResource = "Resume Mount"
-    static let description = IntentDescription("Resume remote work and refresh a MOUNTLI location.")
+    static let description = IntentDescription("Resume remote work and refresh a Mountli location.")
 
     @Parameter(title: "Mount") var mount: MountEntity
 
@@ -64,7 +64,7 @@ struct ResumeMountIntent: AppIntent {
 
 struct OpenMountIntent: AppIntent {
     static let title: LocalizedStringResource = "Open Mount"
-    static let description = IntentDescription("Open a MOUNTLI location in Files or Finder.")
+    static let description = IntentDescription("Open a Mountli location in Files or Finder.")
 
     @Parameter(title: "Mount") var mount: MountEntity
 
@@ -76,7 +76,7 @@ struct OpenMountIntent: AppIntent {
 
 struct GetMountStatusIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Mount Status"
-    static let description = IntentDescription("Get the current English status of a MOUNTLI location.")
+    static let description = IntentDescription("Get the current English status of a Mountli location.")
 
     @Parameter(title: "Mount") var mount: MountEntity
 
@@ -206,8 +206,8 @@ private enum MountIntentError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .mountNotFound: "The selected MOUNTLI mount no longer exists."
-        case .storageUnavailable: "MOUNTLI storage is unavailable."
+        case .mountNotFound: "The selected Mountli mount no longer exists."
+        case .storageUnavailable: "Mountli storage is unavailable."
         }
     }
 }

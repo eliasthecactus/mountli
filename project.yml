@@ -20,7 +20,7 @@ packages:
     path: Packages/MountliFileProvider
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    exactVersion: 2.9.5
+    exactVersion: 2.10.0
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -30,7 +30,7 @@ settings:
     MARKETING_VERSION: "1.0.0"
     DEVELOPMENT_TEAM: 3THXLGMP36
     MOUNTLI_KEYCHAIN_ACCESS_GROUP: $(AppIdentifierPrefix)ch.benavo.mountli.shared
-    MOUNTLI_RCLONE_VERSION: "1.75.0"
+    MOUNTLI_RCLONE_VERSION: "1.75.2"
 targets:
   MOUNTLI-macOS:
     type: application
@@ -57,7 +57,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-macOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-macOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)
@@ -91,7 +91,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-macOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-macOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)
@@ -124,7 +124,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-iOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-iOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)

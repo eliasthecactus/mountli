@@ -14,8 +14,8 @@ ARCHIVE="${4:-}"
 
 verify_archive() {
   local archive="$1" expected_host="$2" expected_provider="$3" expected_ui="$4"
-  local app="$archive/Products/Applications/MOUNTLI.app"
-  [[ -d "$app" ]] || { echo "Archived MOUNTLI.app missing from $archive" >&2; return 1; }
+  local app="$archive/Products/Applications/Mountli.app"
+  [[ -d "$app" ]] || { echo "Archived Mountli.app missing from $archive" >&2; return 1; }
   codesign --verify --deep --strict --verbose=2 "$app"
   python3 - "$app" "$VERSION" "$MOUNTLI_ENCRYPTION_EXPORT_COMPLIANCE_CODE" \
     "$expected_host" "$expected_provider" "$expected_ui" <<'PY'
@@ -87,14 +87,14 @@ case "$CHANNEL" in
     verify_archive "$ARCHIVE" \
       ch.benavo.mountli ch.benavo.mountli.fileprovider.macos ch.benavo.mountli.fileproviderui.macos
     for artifact in \
-      "MOUNTLI-$VERSION.zip" "MOUNTLI-$VERSION.dmg" appcast.xml SHA256SUMS \
+      "Mountli-$VERSION.zip" "Mountli-$VERSION.dmg" appcast.xml SHA256SUMS \
       LICENSE THIRD_PARTY_NOTICES.txt ThirdPartyLicenses.tar.gz \
       mountli-go.cdx.json mountli-source.cdx.json notarization-zip.txt notarization-dmg.txt; do
       [[ -s "$ARTIFACT_DIR/$artifact" ]] || { echo "Required direct artifact missing: $artifact" >&2; exit 1; }
     done
     grep -Fq "sparkle:version" "$ARTIFACT_DIR/appcast.xml"
     grep -Fq "sparkle:edSignature" "$ARTIFACT_DIR/appcast.xml"
-    grep -Fq "MOUNTLI-$VERSION.zip" "$ARTIFACT_DIR/appcast.xml"
+    grep -Fq "Mountli-$VERSION.zip" "$ARTIFACT_DIR/appcast.xml"
     (cd "$ARTIFACT_DIR" && shasum -a 256 -c SHA256SUMS)
     python3 - "$ARTIFACT_DIR" <<'PY'
 from pathlib import Path

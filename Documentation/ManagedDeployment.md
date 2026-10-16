@@ -1,6 +1,6 @@
 # Managed Deployment
 
-MOUNTLI reads restriction-only values from `com.apple.configuration.managed`. Unknown or malformed values are ignored and produce a policy Issue rather than silently broadening access. Managed policy never accepts credentials, remote definitions, or resource-file contents.
+Mountli reads restriction-only values from `com.apple.configuration.managed`. Unknown or malformed values are ignored and produce a policy Issue rather than silently broadening access. Managed policy never accepts credentials, remote definitions, or resource-file contents.
 
 Machine-readable deployment artifacts are checked in:
 
@@ -22,9 +22,9 @@ Replace the example organization, UUIDs, support URL, and restrictions in a copy
 | `ForceReadOnly` | Boolean | `false` | Blocks new remote mutations while retaining cached and dirty data. |
 | `AllowCellular` | Boolean | `true` | Allows remote work over cellular connections. |
 | `MaximumConcurrentTransfers` | integer | platform default | Clamped to 1–4 on iOS/iPadOS and 1–8 on macOS. |
-| `SupportURL` | absolute HTTPS URL | MOUNTLI support | Replaces the organization support destination. |
+| `SupportURL` | absolute HTTPS URL | Mountli support | Replaces the organization support destination. |
 
-Policy wins over user settings. When a policy newly disallows a backend or forces read-only mode, MOUNTLI keeps cached content readable and preserves queued/dirty items for administrator resolution; it does not delete data.
+Policy wins over user settings. When a policy newly disallows a backend or forces read-only mode, Mountli keeps cached content readable and preserves queued/dirty items for administrator resolution; it does not delete data.
 
 ## Validation
 

@@ -495,6 +495,27 @@ public struct BridgeFailure: Error, Codable, Equatable, Sendable {
     }
 }
 
+extension BridgeFailure: LocalizedError {
+    public var errorDescription: String? {
+        let detail = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let summary: String =
+            switch kind {
+            case .notAuthenticated: "The storage provider rejected the credentials. Reconnect or edit the remote."
+            case .unreachable: "The storage provider could not be reached. Check the network connection and server address."
+            case .quotaExceeded: "The storage provider reports that the quota is full."
+            case .notFound: "The requested file or folder does not exist on the remote."
+            case .alreadyExists: "An item with this name already exists on the remote."
+            case .permissionDenied: "The storage provider denied access to this location."
+            case .conflict: "The remote item changed while Mountli was working on it."
+            case .unsupported: "This storage provider does not support that operation."
+            case .cancelled: "The operation was cancelled."
+            case .internal: "rclone reported an unexpected error."
+            }
+        guard !detail.isEmpty, detail != summary else { return summary }
+        return "\(summary)\n\n\(detail)"
+    }
+}
+
 public struct BridgeEnvelope<Value: Codable & Sendable>: Codable, Sendable {
     public var schemaVersion: Int
     public var data: Value?

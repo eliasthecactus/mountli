@@ -1,1 +1,1 @@
-Initial release of MOUNTLI for iPhone, iPad, and Mac.
+Initial release of Mountli for iPhone, iPad, and Mac.

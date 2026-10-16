@@ -85,7 +85,7 @@ struct SettingsView: View {
                 }
                 .disabled(!model.managedPolicy.allowCellular)
                 if !model.managedPolicy.allowCellular { managedLabel }
-                Text("MOUNTLI keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop.")
+                Text("Mountli keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Security") {
@@ -138,14 +138,14 @@ struct SettingsView: View {
             }
             Section("About") {
                 LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
-                LabeledContent("rclone", value: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.0")
+                LabeledContent("rclone", value: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.2")
                 Link("Privacy Policy", destination: URL(string: "https://benavo.ch/privacy")!)
                 Link("Source Code", destination: URL(string: "https://github.com/eliasthecactus/mountli")!)
                 Button("License & Acknowledgements…") { showingAcknowledgements = true }
                 if let supportURL = model.managedPolicy.supportURL { Link("Organization Support", destination: supportURL) }
             }
             Section("Reset") {
-                Button("Reset MOUNTLI…", role: .destructive) { showingReset = true }
+                Button("Reset Mountli…", role: .destructive) { showingReset = true }
                 Text("Reset is blocked while any mount has pending or dirty operations.").font(.footnote).foregroundStyle(.secondary)
             }
         }
@@ -172,7 +172,7 @@ struct SettingsView: View {
             result in
             if case .failure(let error) = result { model.presentedError = error.localizedDescription }
         }
-        .alert("Reset MOUNTLI", isPresented: $showingReset) {
+        .alert("Reset Mountli", isPresented: $showingReset) {
             TextField("Type RESET", text: $resetConfirmation)
             Button("Reset", role: .destructive) {
                 model.run { try await model.resetMountli() }
@@ -276,7 +276,7 @@ private struct AcknowledgementsView: View {
     private static func loadDocuments() -> [BundledLegalDocument] {
         var result: [BundledLegalDocument] = []
         if let license = Bundle.main.url(forResource: "LICENSE", withExtension: nil) {
-            result.append(BundledLegalDocument(title: "MOUNTLI — MIT License", url: license))
+            result.append(BundledLegalDocument(title: "Mountli — MIT License", url: license))
         }
         if let notices = Bundle.main.url(forResource: "THIRD_PARTY_NOTICES", withExtension: "txt") {
             result.append(BundledLegalDocument(title: "Third-Party Notices", url: notices))
@@ -326,6 +326,7 @@ struct ConfigExportFlow: View {
     @State private var plaintext = false
     @State private var confirmingPlaintext = false
     @State private var working = false
+    @State private var error: String?
     @State private var showingExporter = false
     @State private var document = ConfigFileDocument()
 
@@ -335,7 +336,7 @@ struct ConfigExportFlow: View {
                 Section("Encrypted export") {
                     SecureField("New export passphrase", text: $password)
                     SecureField("Confirm passphrase", text: $confirmation)
-                    Text("The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by MOUNTLI.")
+                    Text("The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by Mountli.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Format") {
@@ -360,6 +361,7 @@ struct ConfigExportFlow: View {
                 }
             }
         }
+        .errorAlert($error, title: "Export failed")
         #if os(macOS)
             .frame(minWidth: 520, minHeight: 390)
         #endif
@@ -374,7 +376,7 @@ struct ConfigExportFlow: View {
             Text("Anyone with this file can read the credentials and tokens for the exported remotes.")
         }
         .fileExporter(isPresented: $showingExporter, document: document, contentType: .rcloneConfig, defaultFilename: "rclone.conf") { result in
-            if case .failure(let error) = result { model.presentedError = error.localizedDescription } else { dismiss() }
+            if case .failure(let error) = result { self.error = error.localizedDescription } else { dismiss() }
         }
     }
 
@@ -383,13 +385,13 @@ struct ConfigExportFlow: View {
         Task {
             do {
                 let context = LAContext()
-                try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Export your MOUNTLI remote configuration")
+                try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Export your Mountli remote configuration")
                 let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("mountli-export-\(UUID().uuidString).conf")
                 defer { try? FileManager.default.removeItem(at: temporary) }
                 try await model.exportConfig(to: temporary, password: plaintext ? nil : password, selectedRemote: selectedRemote)
                 document = ConfigFileDocument(data: try Data(contentsOf: temporary))
                 showingExporter = true
-            } catch { model.presentedError = error.localizedDescription }
+            } catch { self.error = error.localizedDescription }
             working = false
         }
     }
@@ -408,6 +410,7 @@ struct ConfigImportFlow: View {
     @State private var requirementReferences: [String: ManagedResourceReference] = [:]
     @State private var confirmingReplacement = false
     @State private var working = false
+    @State private var error: String?
     @State private var committed = false
 
     private var collisions: [String] {
@@ -427,7 +430,7 @@ struct ConfigImportFlow: View {
                             Label("Collisions: \(collisions.joined(separator: ", "))", systemImage: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
                             Text(
-                                "MOUNTLI never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically."
+                                "Mountli never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically."
                             )
                             .font(.footnote).foregroundStyle(.secondary)
                         }
@@ -449,7 +452,7 @@ struct ConfigImportFlow: View {
                                     }
                                 }
                             }
-                            Text("Every external file or directory is copied or bookmarked into MOUNTLI’s protected resource store before validation.")
+                            Text("Every external file or directory is copied or bookmarked into Mountli’s protected resource store before validation.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
@@ -457,7 +460,7 @@ struct ConfigImportFlow: View {
                     Section("rclone.conf") {
                         SecureField("Config password (only if encrypted)", text: $password)
                         Button("Choose rclone.conf…", systemImage: "doc") { showingConfigPicker = true }
-                        Text("MOUNTLI parses without mutating the live vault. Imported section names and overlay references remain exact.")
+                        Text("Mountli parses without mutating the live vault. Imported section names and overlay references remain exact.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
@@ -475,11 +478,12 @@ struct ConfigImportFlow: View {
                 }
             }
         }
+        .errorAlert($error, title: "Import failed")
         #if os(macOS)
             .frame(minWidth: 560, minHeight: 480)
         #endif
         .fileImporter(isPresented: $showingConfigPicker, allowedContentTypes: [.rcloneConfig, .plainText]) { result in
-            if case .success(let url) = result { parse(url) } else if case .failure(let error) = result { model.presentedError = error.localizedDescription }
+            if case .success(let url) = result { parse(url) } else if case .failure(let error) = result { self.error = error.localizedDescription }
         }
         .fileImporter(
             isPresented: Binding(
@@ -492,7 +496,7 @@ struct ConfigImportFlow: View {
             if case .success(let url) = result {
                 relink(url, requirement: requirement)
             } else if case .failure(let error) = result {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
             }
         }
         .confirmationDialog("Replace all colliding sections?", isPresented: $confirmingReplacement, titleVisibility: .visible) {
@@ -514,7 +518,7 @@ struct ConfigImportFlow: View {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             do { imported = try await model.importConfig(from: url, password: password.isEmpty ? nil : password) } catch {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
             }
             working = false
         }
@@ -537,7 +541,7 @@ struct ConfigImportFlow: View {
                     imported?.sections[section].options[requirement.optionName] = value.path
                 }
                 completedRequirements.insert(requirement.id)
-            } catch { model.presentedError = error.localizedDescription }
+            } catch { self.error = error.localizedDescription }
             working = false
         }
     }
@@ -550,7 +554,7 @@ struct ConfigImportFlow: View {
                 committed = true
                 dismiss()
             } catch {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
                 working = false
             }
         }

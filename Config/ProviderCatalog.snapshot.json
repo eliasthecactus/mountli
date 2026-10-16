@@ -69,7 +69,7 @@
     "yandex",
     "zoho"
   ],
-  "rcloneVersion": "1.75.0",
+  "rcloneVersion": "1.75.2",
   "schemaVersion": 1,
   "sourcePackage": "github.com/rclone/rclone/backend/all"
 }

@@ -7,6 +7,21 @@ public enum DomainRegistryError: Error, Sendable {
     case orphanDomain(String)
 }
 
+extension DomainRegistryError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .unavailable(let detail):
+            detail.hasPrefix("mountli.")
+                ? "This location is not registered with Finder or Files. Restore it from Issues, or remove and add the mount again."
+                : detail
+        case .dirtyOperations(let count):
+            "\(count) change\(count == 1 ? " is" : "s are") still waiting to upload. Wait for them to finish, then try again."
+        case .orphanDomain:
+            "Finder or Files still shows a location that Mountli no longer manages."
+        }
+    }
+}
+
 public actor DomainRegistry {
     public init() {}
 
@@ -62,7 +77,7 @@ public actor DomainRegistry {
                 ttl: 300
             )
         else {
-            throw DomainRegistryError.unavailable("Removal already in progress for \(mount.domainIdentifier)")
+            throw DomainRegistryError.unavailable("This mount is already being removed.")
         }
         guard pending == 0 else {
             try await repository.releaseRemovalAdmission(mountID: mount.id, owner: owner)
@@ -106,6 +121,14 @@ public actor DomainRegistry {
         for domain in domains {
             _ = try await removeDomain(domain, preserveDirtyUserData: false)
         }
+    }
+
+    /// Removes a Mountli-owned domain that no longer has a matching mount definition.
+    public func removeOrphan(identifier: String) async throws {
+        guard identifier.hasPrefix("mountli."),
+            let domain = try await installedDomains().first(where: { $0.identifier.rawValue == identifier })
+        else { return }
+        _ = try await removeDomain(domain, preserveDirtyUserData: true)
     }
 
     public func userVisibleRoot(for mount: MountDefinition) async throws -> URL {

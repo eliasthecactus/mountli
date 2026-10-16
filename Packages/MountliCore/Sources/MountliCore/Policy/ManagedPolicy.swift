@@ -51,7 +51,7 @@ extension RemoteIdentityPolicyError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .disabledSSHHostValidation:
-            "SFTP host identity verification cannot be disabled. Choose a known_hosts file or let MOUNTLI pin the server key on first connection."
+            "SFTP host identity verification cannot be disabled. Choose a known_hosts file or let Mountli pin the server key on first connection."
         }
     }
 }

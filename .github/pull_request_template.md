@@ -1,6 +1,6 @@
 ## Change
 
-Describe the observable behavior and why it belongs in MOUNTLI.
+Describe the observable behavior and why it belongs in Mountli.
 
 ## Verification
 

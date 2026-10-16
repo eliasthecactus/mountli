@@ -37,13 +37,13 @@ def documents() -> tuple[str, str]:
     names = backend_names()
     catalog = {
         "schemaVersion": 1,
-        "rcloneVersion": "1.75.0",
+        "rcloneVersion": "1.75.2",
         "sourcePackage": "github.com/rclone/rclone/backend/all",
         "backends": names,
     }
     capabilities = {
         "schemaVersion": 1,
-        "rcloneVersion": "1.75.0",
+        "rcloneVersion": "1.75.2",
         "classes": [
             {"name": "readOnly", "representative": "http", "requiredAssertions": ["read"]},
             {"name": "objectStore", "representative": "s3", "requiredAssertions": ["read", "write", "directoriesVirtual"]},

@@ -9,7 +9,7 @@
       <key>PayloadVersion</key><integer>1</integer>
       <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.ios.appconfig</string>
       <key>PayloadUUID</key><string>C90FDC27-B267-4B5D-A407-D6B10EA85E5B</string>
-      <key>PayloadDisplayName</key><string>MOUNTLI Managed Configuration</string>
+      <key>PayloadDisplayName</key><string>Mountli Managed Configuration</string>
       <key>PolicyVersion</key><integer>1</integer>
       <key>AllowedBackendTypes</key><array><string>webdav</string><string>sftp</string><string>crypt</string></array>
       <key>AllowConfigImport</key><false/>
@@ -25,8 +25,8 @@
   <key>PayloadVersion</key><integer>1</integer>
   <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.ios</string>
   <key>PayloadUUID</key><string>B9C8D70B-EC5D-4E13-B7C3-BE80C45CF125</string>
-  <key>PayloadDisplayName</key><string>MOUNTLI iOS Managed Policy</string>
+  <key>PayloadDisplayName</key><string>Mountli iOS Managed Policy</string>
   <key>PayloadOrganization</key><string>Example Organization</string>
-  <key>PayloadDescription</key><string>Example restriction-only MOUNTLI managed app configuration.</string>
+  <key>PayloadDescription</key><string>Example restriction-only Mountli managed app configuration.</string>
 </dict>
 </plist>

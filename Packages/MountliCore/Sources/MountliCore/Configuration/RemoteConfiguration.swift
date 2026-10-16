@@ -7,6 +7,19 @@ public enum DependencyGraphError: Error, Equatable, Sendable {
     case remoteInUse(remote: String, dependents: [String])
 }
 
+extension DependencyGraphError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .missingDependency(let remote, let dependency):
+            "“\(remote)” refers to a remote named “\(dependency)” that does not exist."
+        case .cycle(let names):
+            "These remotes refer to each other in a loop: \(names.joined(separator: " → "))."
+        case .remoteInUse(let remote, let dependents):
+            "“\(remote)” is still used by \(dependents.joined(separator: ", ")). Remove those first."
+        }
+    }
+}
+
 public struct RemoteDependencyGraph: Sendable {
     public let dependencies: [String: Set<String>]
 
@@ -146,7 +159,7 @@ public enum LocalResourceValidator {
             if candidate == root || candidate.path.hasPrefix(root.path + "/") {
                 throw BridgeFailure(
                     kind: .permissionDenied,
-                    message: "Choose a directory outside MOUNTLI, temporary, and File Provider storage",
+                    message: "Choose a directory outside Mountli, temporary, and File Provider storage",
                     retryable: false
                 )
             }

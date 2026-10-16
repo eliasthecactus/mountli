@@ -9,7 +9,7 @@ action=(xcodebuild -project MOUNTLI.xcodeproj -derivedDataPath "$ROOT/.build/ui"
 "${action[@]}" -scheme MOUNTLI-macOS -configuration Debug \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
 
-mac_app="$ROOT/.build/ui/Build/Products/Debug/MOUNTLI.app/Contents/MacOS/MOUNTLI"
+mac_app="$ROOT/.build/ui/Build/Products/Debug/Mountli.app/Contents/MacOS/Mountli"
 mac_log="$ROOT/.build/ui/macos-smoke.log"
 "$mac_app" -AppleLanguages '(en)' -AppleLocale en_US >"$mac_log" 2>&1 &
 mac_pid=$!

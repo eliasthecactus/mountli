@@ -8,8 +8,8 @@ LICENSES="$ROOT/ThirdPartyLicenses"
 [[ -s "$ROOT/LICENSE" ]] || { echo "MIT LICENSE is missing" >&2; exit 1; }
 [[ -s "$NOTICES" ]] || { echo "THIRD_PARTY_NOTICES.txt is missing" >&2; exit 1; }
 [[ -d "$LICENSES" ]] || { echo "ThirdPartyLicenses is missing" >&2; exit 1; }
-grep -Fq 'rclone v1.75.0' "$NOTICES" || { echo "notices do not identify pinned rclone" >&2; exit 1; }
-grep -Fq 'Sparkle 2.9.5' "$NOTICES" || { echo "notices do not identify pinned Sparkle" >&2; exit 1; }
+grep -Fq 'rclone v1.75.2' "$NOTICES" || { echo "notices do not identify pinned rclone" >&2; exit 1; }
+grep -Fq 'Sparkle 2.10.0' "$NOTICES" || { echo "notices do not identify pinned Sparkle" >&2; exit 1; }
 
 python3 - "$LICENSES" <<'PY'
 from pathlib import Path

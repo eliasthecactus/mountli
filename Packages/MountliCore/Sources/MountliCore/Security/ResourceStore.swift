@@ -6,6 +6,19 @@ public enum ResourceStoreError: Error, Equatable, Sendable {
     case invalidSelection(String)
 }
 
+extension ResourceStoreError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .missing:
+            "A file this remote depends on is missing. Relink it in Settings › Protected resource files."
+        case .staleBookmark:
+            "Mountli lost access to a folder this remote uses. Relink it in Settings › Protected resource files."
+        case .invalidSelection(let message):
+            message
+        }
+    }
+}
+
 public actor ResourceStore {
     private let runtimeRoot: URL
     private let appGroupRoot: URL

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP="${MOUNTLI_SMOKE_APP:?Set MOUNTLI_SMOKE_APP to the signed archived MOUNTLI.app}"
+APP="${MOUNTLI_SMOKE_APP:?Set MOUNTLI_SMOKE_APP to the signed archived Mountli.app}"
 DRIVER="${MOUNTLI_SMOKE_DRIVER:?Set MOUNTLI_SMOKE_DRIVER to the protected signed File Provider smoke driver}"
 : "${MOUNTLI_TEST_WEBDAV_URL:?Set protected WebDAV fixture URL}"
 : "${MOUNTLI_TEST_WEBDAV_USERNAME:?Set protected WebDAV fixture username}"

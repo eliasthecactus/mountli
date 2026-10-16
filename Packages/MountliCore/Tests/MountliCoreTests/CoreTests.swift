@@ -757,7 +757,7 @@ import Testing
     let snapshot = DiagnosticSnapshot(
         appVersion: "1.0",
         buildNumber: "1",
-        rcloneVersion: "1.75.0",
+        rcloneVersion: "1.75.2",
         deviceClass: "Test",
         policy: ManagedPolicy(supportURL: URL(string: "https://secret.example/private-support")),
         mounts: [

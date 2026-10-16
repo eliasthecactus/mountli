@@ -13,7 +13,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    environment: nightly
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.secrets.outputs.configured }}
+    steps:
+      - name: Check signed smoke secrets
+        id: secrets
+        env:
+          CERTIFICATE: ${{ secrets.SMOKE_DEVELOPMENT_CERTIFICATE_BASE64 }}
+          API_KEY: ${{ secrets.ASC_API_PRIVATE_KEY_PEM }}
+        run: |
+          if [[ -n "$CERTIFICATE" && -n "$API_KEY" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Signed smoke secrets are not configured in the nightly environment; skipping."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
   smoke:
+    needs: preflight
+    if: needs.preflight.outputs.configured == 'true'
     environment: nightly
     runs-on: macos-26
     timeout-minutes: 120

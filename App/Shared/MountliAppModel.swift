@@ -1254,7 +1254,7 @@ final class MountliAppModel {
         let diagnosticSnapshot = DiagnosticSnapshot(
             appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
             buildNumber: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown",
-            rcloneVersion: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.0",
+            rcloneVersion: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.2",
             deviceClass: deviceClass,
             policy: managedPolicy,
             mounts: diagnosticMounts,

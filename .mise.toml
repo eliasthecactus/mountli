@@ -1,5 +1,5 @@
 [tools]
-go = "1.25.12"
+go = "1.26.9"
 ruby = "3.4.10"
 xcodegen = "2.46.0"
 gitleaks = "8.28.0"
@@ -7,8 +7,8 @@ syft = "1.29.0"
 gh = "2.97.0"
 
 [env]
-GOTOOLCHAIN = "go1.25.12+auto"
-MOUNTLI_RCLONE_VERSION = "v1.75.0"
+GOTOOLCHAIN = "go1.26.9+auto"
+MOUNTLI_RCLONE_VERSION = "v1.75.2"
 MOUNTLI_GOMOBILE_VERSION = "v0.0.0-20260709172247-6129f5bee9d5"
 
 [tasks.bootstrap-go-tools]

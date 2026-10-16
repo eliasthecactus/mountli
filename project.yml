@@ -30,7 +30,7 @@ settings:
     MARKETING_VERSION: "1.0.0"
     DEVELOPMENT_TEAM: 3THXLGMP36
     MOUNTLI_KEYCHAIN_ACCESS_GROUP: $(AppIdentifierPrefix)ch.benavo.mountli.shared
-    MOUNTLI_RCLONE_VERSION: "1.75.0"
+    MOUNTLI_RCLONE_VERSION: "1.75.2"
 targets:
   MOUNTLI-macOS:
     type: application

@@ -89,7 +89,7 @@ def validate(values: dict, platform: str, catalog: set[str]) -> None:
         fail(f"{platform} AllowedBackendTypes must be an array of strings")
     unavailable = sorted(set(backends) - catalog)
     if unavailable:
-        fail(f"{platform} profile names backends absent from rclone v1.75.0: {unavailable}")
+        fail(f"{platform} profile names backends absent from rclone v1.75.2: {unavailable}")
     maximum = values.get("MaximumConcurrentTransfers")
     platform_maximum = 4 if platform == "iOS" else 8
     if maximum is not None and (

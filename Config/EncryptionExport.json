@@ -12,7 +12,7 @@
       "purpose": "AES-GCM protection of the local configuration vault"
     },
     {
-      "component": "rclone v1.75.0",
+      "component": "rclone v1.75.2",
       "purpose": "TLS, SSH, provider authentication, and user-configured rclone Crypt"
     },
     {

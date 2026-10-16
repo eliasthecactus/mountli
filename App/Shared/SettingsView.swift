@@ -138,7 +138,7 @@ struct SettingsView: View {
             }
             Section("About") {
                 LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
-                LabeledContent("rclone", value: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.0")
+                LabeledContent("rclone", value: Bundle.main.object(forInfoDictionaryKey: "MOUNTLIRcloneVersion") as? String ?? "1.75.2")
                 Link("Privacy Policy", destination: URL(string: "https://benavo.ch/privacy")!)
                 Link("Source Code", destination: URL(string: "https://github.com/eliasthecactus/mountli")!)
                 Button("License & Acknowledgements…") { showingAcknowledgements = true }

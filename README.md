@@ -6,7 +6,7 @@ MOUNTLI is a free native app for iPhone, iPad, and Mac that exposes configured r
 
 ## Status
 
-MOUNTLI is under active development. The source architecture targets Swift 6, Xcode 26.6, iOS/iPadOS 18+, macOS 15+, Go 1.25, and rclone v1.75.0. Distribution builds require Apple signing, registered App IDs and App Group, and matching provisioning profiles; the production targets do not use the development-only FileProvider Testing Mode entitlement.
+MOUNTLI is under active development. The source architecture targets Swift 6, Xcode 26.6, iOS/iPadOS 18+, macOS 15+, Go 1.26, and rclone v1.75.2. Distribution builds require Apple signing, registered App IDs and App Group, and matching provisioning profiles; the production targets do not use the development-only FileProvider Testing Mode entitlement.
 
 ## Architecture
 

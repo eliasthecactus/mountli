@@ -7,6 +7,21 @@ public enum DomainRegistryError: Error, Sendable {
     case orphanDomain(String)
 }
 
+extension DomainRegistryError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .unavailable(let detail):
+            detail.hasPrefix("mountli.")
+                ? "This location is not registered with Finder or Files. Restore it from Issues, or remove and add the mount again."
+                : detail
+        case .dirtyOperations(let count):
+            "\(count) change\(count == 1 ? " is" : "s are") still waiting to upload. Wait for them to finish, then try again."
+        case .orphanDomain:
+            "Finder or Files still shows a location that MOUNTLI no longer manages."
+        }
+    }
+}
+
 public actor DomainRegistry {
     public init() {}
 
@@ -62,7 +77,7 @@ public actor DomainRegistry {
                 ttl: 300
             )
         else {
-            throw DomainRegistryError.unavailable("Removal already in progress for \(mount.domainIdentifier)")
+            throw DomainRegistryError.unavailable("This mount is already being removed.")
         }
         guard pending == 0 else {
             try await repository.releaseRemovalAdmission(mountID: mount.id, owner: owner)

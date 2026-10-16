@@ -909,3 +909,24 @@ import Testing
         fileProviderStorageURLs: [provider]
     )
 }
+
+@Test func userFacingErrorsCarryReadableMessages() {
+    let auth = BridgeFailure(kind: .notAuthenticated, message: "401 Unauthorized", retryable: false) as Error
+    #expect(auth.localizedDescription.hasPrefix("The storage provider rejected the credentials."))
+    #expect(auth.localizedDescription.hasSuffix("401 Unauthorized"))
+    let bare = BridgeFailure(kind: .unreachable, message: "", retryable: true) as Error
+    #expect(!bare.localizedDescription.contains("\n"))
+
+    let errors: [any Error] = [
+        DomainRegistryError.unavailable("Enter a name for this mount."),
+        DomainRegistryError.dirtyOperations(2),
+        ResourceStoreError.invalidSelection("Choose a local folder before adding this mount."),
+        DependencyGraphError.remoteInUse(remote: "base", dependents: ["Photos"]),
+        ItemRepositoryError.removalInProgress(UUID()),
+    ]
+    for error in errors {
+        #expect(!error.localizedDescription.contains("MountliCore."))
+    }
+    #expect(DomainRegistryError.unavailable("Enter a name for this mount.").localizedDescription == "Enter a name for this mount.")
+    #expect(DomainRegistryError.dirtyOperations(1).localizedDescription.hasPrefix("1 change is"))
+}

@@ -359,7 +359,7 @@ final class MountliAppModel {
 
     func clearActivityHistory() async throws {
         guard let stateStore else {
-            throw DomainRegistryError.unavailable("Operational state is not loaded")
+            throw DomainRegistryError.unavailable("MOUNTLI is still starting up. Try again in a moment.")
         }
         _ = try await stateStore.clearCompletedOperationHistory()
         requestedOperationID = nil
@@ -868,7 +868,7 @@ final class MountliAppModel {
         defer { scopedURL?.stopAccessingSecurityScopedResource() }
         do {
             guard let stateStore else {
-                throw DomainRegistryError.unavailable("Operational state is not loaded")
+                throw DomainRegistryError.unavailable("MOUNTLI is still starting up. Try again in a moment.")
             }
             refreshManagedPolicy()
             try managedPolicy.requireRemoteAccess(remote)
@@ -917,7 +917,7 @@ final class MountliAppModel {
     @discardableResult
     func removeMount(_ mount: MountDefinition, preserveDirtyData: Bool = true) async throws -> URL? {
         guard let stateStore else {
-            throw DomainRegistryError.unavailable("Operational state is not loaded")
+            throw DomainRegistryError.unavailable("MOUNTLI is still starting up. Try again in a moment.")
         }
         let preserved = try await domains.remove(
             mount,

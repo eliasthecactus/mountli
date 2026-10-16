@@ -30,9 +30,9 @@ xcodebuild -exportArchive \
   -exportPath "$EXPORT" \
   -exportOptionsPlist Config/ExportOptions/DeveloperID.plist
 
-APP="$EXPORT/MOUNTLI.app"
-ZIP="$RELEASES/MOUNTLI-$VERSION.zip"
-DMG="$RELEASES/MOUNTLI-$VERSION.dmg"
+APP="$EXPORT/Mountli.app"
+ZIP="$RELEASES/Mountli-$VERSION.zip"
+DMG="$RELEASES/Mountli-$VERSION.dmg"
 ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
 xcrun notarytool submit "$ZIP" --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait \
   | tee "$RELEASES/notarization-zip.txt"
@@ -53,8 +53,8 @@ rm -f "$KEY_FILE"
 
 DMG_STAGE="$BUILD_DIR/dmg"
 mkdir -p "$DMG_STAGE"
-ditto "$APP" "$DMG_STAGE/MOUNTLI.app"
-hdiutil create -volname MOUNTLI -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG"
+ditto "$APP" "$DMG_STAGE/Mountli.app"
+hdiutil create -volname Mountli -srcfolder "$DMG_STAGE" -ov -format UDZO "$DMG"
 xcrun notarytool submit "$DMG" --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait \
   | tee "$RELEASES/notarization-dmg.txt"
 xcrun stapler staple "$DMG"
@@ -65,8 +65,8 @@ tar -czf "$RELEASES/ThirdPartyLicenses.tar.gz" ThirdPartyLicenses
 (
   cd "$RELEASES"
   shasum -a 256 \
-    "MOUNTLI-$VERSION.zip" \
-    "MOUNTLI-$VERSION.dmg" \
+    "Mountli-$VERSION.zip" \
+    "Mountli-$VERSION.dmg" \
     appcast.xml \
     LICENSE \
     THIRD_PARTY_NOTICES.txt \

@@ -62,7 +62,7 @@ private struct OnboardingView: View {
     @State private var notificationsDenied = false
 
     private let pages: [(title: String, icon: String)] = [
-        ("Welcome to MOUNTLI", "sparkles"),
+        ("Welcome to Mountli", "sparkles"),
         ("Add your storage", "network.badge.shield.half.filled"),
         ("Stay informed", "bell.badge"),
         ("Add to \(OnboardingView.filesApp)", "externaldrive.badge.plus"),
@@ -134,7 +134,7 @@ private struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     feature("lock.shield", "Credentials and configuration stay encrypted on this device.")
                     feature("arrow.left.arrow.right", "Files travel directly between this device and your storage.")
-                    feature("hand.raised", "No MOUNTLI account, relay server, ads, or tracking.")
+                    feature("hand.raised", "No Mountli account, relay server, ads, or tracking.")
                 }
                 .multilineTextAlignment(.leading)
                 .padding(16)
@@ -175,7 +175,7 @@ private struct OnboardingView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
                     if notificationsDenied {
-                        Text("Notifications are turned off for MOUNTLI in System Settings.")
+                        Text("Notifications are turned off for Mountli in System Settings.")
                             .font(.footnote).foregroundStyle(.orange)
                     }
                 }
@@ -305,7 +305,7 @@ struct ContentView: View {
             )
         ) {
             ActionFailureView(
-                title: "MOUNTLI couldn’t complete that action",
+                title: "Mountli couldn’t complete that action",
                 message: model.presentedError ?? "Unknown error",
                 dismiss: { model.presentedError = nil }
             )
@@ -361,7 +361,7 @@ struct ContentView: View {
                         .tag(SidebarSection.settings)
                 }
             }
-            .navigationTitle("MOUNTLI")
+            .navigationTitle("Mountli")
             .safeAreaInset(edge: .top) { brandHeader }
         } detail: {
             // Each section gets its own stack so mount and remote rows can push their detail views.
@@ -438,7 +438,7 @@ struct ContentView: View {
         HStack(spacing: 10) {
             MountliMark(size: 32)
             VStack(alignment: .leading, spacing: 1) {
-                Text("MOUNTLI").font(.headline)
+                Text("Mountli").font(.headline)
                 Text("Rclone in Finder & Files").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -475,7 +475,7 @@ struct MountsView: View {
                     } header: {
                         Text("Finder & Files Locations")
                     } footer: {
-                        Text("Apple manages downloaded files and disk space. MOUNTLI connects each location directly to its storage provider.")
+                        Text("Apple manages downloaded files and disk space. Mountli connects each location directly to its storage provider.")
                     }
                 }
             }
@@ -646,7 +646,7 @@ struct RemotesView: View {
                 ContentUnavailableView {
                     Label("No remotes yet", systemImage: "network.badge.shield.half.filled")
                 } description: {
-                    Text("Credentials stay in an encrypted local vault and are never sent to MOUNTLI servers.")
+                    Text("Credentials stay in an encrypted local vault and are never sent to Mountli servers.")
                 } actions: {
                     Button("Add Remote") { model.showingAddRemote = true }.buttonStyle(.borderedProminent)
                 }
@@ -752,7 +752,7 @@ private struct RemoteDetailView: View {
             defer { checking = false }
             do {
                 if reconnect { try await model.reconnect(remote) } else { try await model.testConnection(remote) }
-                connectionMessage = reconnect ? "MOUNTLI reconnected this remote and refreshed its mounts." : "Connection successful."
+                connectionMessage = reconnect ? "Mountli reconnected this remote and refreshed its mounts." : "Connection successful."
             } catch {
                 model.presentedError = error.localizedDescription
             }
@@ -1044,7 +1044,7 @@ struct IssuesView: View {
                         } else if issue.hasPrefix("orphan:") {
                             let identifier = String(issue.dropFirst("orphan:".count))
                             IssueCard(
-                                title: "\(Self.filesLabel) shows a location MOUNTLI no longer manages", code: "DOMAIN_ORPHANED", mount: nil, model: model
+                                title: "\(Self.filesLabel) shows a location Mountli no longer manages", code: "DOMAIN_ORPHANED", mount: nil, model: model
                             ) {
                                 Button("Remove from \(Self.filesLabel)") { model.run { try await model.removeOrphanDomain(identifier) } }
                             }
@@ -1101,7 +1101,7 @@ struct IssuesView: View {
             .disabled(duplicateRename.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             Button("Cancel", role: .cancel) { renamingIssue = nil }
         } message: {
-            Text("MOUNTLI will relist and match the provider’s stable object ID before renaming anything.")
+            Text("Mountli will relist and match the provider’s stable object ID before renaming anything.")
         }
         .sheet(item: issueBinding) { issue in
             IssueDetailView(model: model, issue: issue)
@@ -1153,7 +1153,7 @@ struct IssuesView: View {
     private func issueImpact(_ code: String) -> String {
         if code.localizedCaseInsensitiveContains("auth") { return "Authentication is required before this mount can sync." }
         if code.localizedCaseInsensitiveContains("quota") { return "The provider reports insufficient storage quota." }
-        if code.localizedCaseInsensitiveContains("conflict") { return "Remote and local changes conflicted; MOUNTLI kept both versions." }
+        if code.localizedCaseInsensitiveContains("conflict") { return "Remote and local changes conflicted; Mountli kept both versions." }
         if code.localizedCaseInsensitiveContains("duplicate") { return "The provider returned duplicate names that need review." }
         return "This mount could not complete its most recent sync operation."
     }
@@ -1228,7 +1228,7 @@ private struct IssueCard<Actions: View>: View {
     @ViewBuilder private var buttons: some View {
         actions()
         Button("Copy Support Details") {
-            copy("MOUNTLI issue \(code)\nMount: \(mount?.id.uuidString.lowercased() ?? "none")")
+            copy("Mountli issue \(code)\nMount: \(mount?.id.uuidString.lowercased() ?? "none")")
         }
     }
 
@@ -1268,7 +1268,7 @@ private struct IssueDetailView: View {
                     }
                     Button("Copy Support Details") {
                         let details =
-                            "MOUNTLI issue \(issue.diagnosticCode)\nIssue: \(issue.id.uuidString.lowercased())\nMount: \(issue.mountID?.uuidString.lowercased() ?? "none")"
+                            "Mountli issue \(issue.diagnosticCode)\nIssue: \(issue.id.uuidString.lowercased())\nMount: \(issue.mountID?.uuidString.lowercased() ?? "none")"
                         #if os(macOS)
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(details, forType: .string)

@@ -159,7 +159,7 @@ public enum LocalResourceValidator {
             if candidate == root || candidate.path.hasPrefix(root.path + "/") {
                 throw BridgeFailure(
                     kind: .permissionDenied,
-                    message: "Choose a directory outside MOUNTLI, temporary, and File Provider storage",
+                    message: "Choose a directory outside Mountli, temporary, and File Provider storage",
                     retryable: false
                 )
             }

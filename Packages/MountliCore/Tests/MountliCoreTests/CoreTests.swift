@@ -563,7 +563,7 @@ import Testing
         Issue.record("Expected preserved conflict")
         return
     }
-    #expect(name.hasPrefix("report (conflict from MOUNTLI 1970-01-01"))
+    #expect(name.hasPrefix("report (conflict from Mountli 1970-01-01"))
     #expect(name.hasSuffix("abcdef).txt"))
 
     let now = Date.now

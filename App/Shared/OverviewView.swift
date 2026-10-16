@@ -124,7 +124,7 @@ private struct OverviewHero: View {
         case .noRemotes:
             "A remote is any storage rclone supports: Google Drive, OneDrive, S3, SFTP, WebDAV and many more. "
                 + "Credentials stay encrypted on this device."
-        case .noMounts: "Pick a remote and a folder. MOUNTLI adds it to \(Self.filesApp) so you can browse it like any other drive."
+        case .noMounts: "Pick a remote and a folder. Mountli adds it to \(Self.filesApp) so you can browse it like any other drive."
         case .attention: "Some locations can’t sync until you review them."
         case .healthy:
             model.mounts.count == 1

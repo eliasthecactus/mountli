@@ -85,7 +85,7 @@ struct SettingsView: View {
                 }
                 .disabled(!model.managedPolicy.allowCellular)
                 if !model.managedPolicy.allowCellular { managedLabel }
-                Text("MOUNTLI keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop.")
+                Text("Mountli keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop.")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section("Security") {
@@ -145,7 +145,7 @@ struct SettingsView: View {
                 if let supportURL = model.managedPolicy.supportURL { Link("Organization Support", destination: supportURL) }
             }
             Section("Reset") {
-                Button("Reset MOUNTLI…", role: .destructive) { showingReset = true }
+                Button("Reset Mountli…", role: .destructive) { showingReset = true }
                 Text("Reset is blocked while any mount has pending or dirty operations.").font(.footnote).foregroundStyle(.secondary)
             }
         }
@@ -172,7 +172,7 @@ struct SettingsView: View {
             result in
             if case .failure(let error) = result { model.presentedError = error.localizedDescription }
         }
-        .alert("Reset MOUNTLI", isPresented: $showingReset) {
+        .alert("Reset Mountli", isPresented: $showingReset) {
             TextField("Type RESET", text: $resetConfirmation)
             Button("Reset", role: .destructive) {
                 model.run { try await model.resetMountli() }
@@ -276,7 +276,7 @@ private struct AcknowledgementsView: View {
     private static func loadDocuments() -> [BundledLegalDocument] {
         var result: [BundledLegalDocument] = []
         if let license = Bundle.main.url(forResource: "LICENSE", withExtension: nil) {
-            result.append(BundledLegalDocument(title: "MOUNTLI — MIT License", url: license))
+            result.append(BundledLegalDocument(title: "Mountli — MIT License", url: license))
         }
         if let notices = Bundle.main.url(forResource: "THIRD_PARTY_NOTICES", withExtension: "txt") {
             result.append(BundledLegalDocument(title: "Third-Party Notices", url: notices))
@@ -336,7 +336,7 @@ struct ConfigExportFlow: View {
                 Section("Encrypted export") {
                     SecureField("New export passphrase", text: $password)
                     SecureField("Confirm passphrase", text: $confirmation)
-                    Text("The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by MOUNTLI.")
+                    Text("The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by Mountli.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Format") {
@@ -385,7 +385,7 @@ struct ConfigExportFlow: View {
         Task {
             do {
                 let context = LAContext()
-                try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Export your MOUNTLI remote configuration")
+                try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Export your Mountli remote configuration")
                 let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("mountli-export-\(UUID().uuidString).conf")
                 defer { try? FileManager.default.removeItem(at: temporary) }
                 try await model.exportConfig(to: temporary, password: plaintext ? nil : password, selectedRemote: selectedRemote)
@@ -430,7 +430,7 @@ struct ConfigImportFlow: View {
                             Label("Collisions: \(collisions.joined(separator: ", "))", systemImage: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.orange)
                             Text(
-                                "MOUNTLI never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically."
+                                "Mountli never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically."
                             )
                             .font(.footnote).foregroundStyle(.secondary)
                         }
@@ -452,7 +452,7 @@ struct ConfigImportFlow: View {
                                     }
                                 }
                             }
-                            Text("Every external file or directory is copied or bookmarked into MOUNTLI’s protected resource store before validation.")
+                            Text("Every external file or directory is copied or bookmarked into Mountli’s protected resource store before validation.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
                     }
@@ -460,7 +460,7 @@ struct ConfigImportFlow: View {
                     Section("rclone.conf") {
                         SecureField("Config password (only if encrypted)", text: $password)
                         Button("Choose rclone.conf…", systemImage: "doc") { showingConfigPicker = true }
-                        Text("MOUNTLI parses without mutating the live vault. Imported section names and overlay references remain exact.")
+                        Text("Mountli parses without mutating the live vault. Imported section names and overlay references remain exact.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }

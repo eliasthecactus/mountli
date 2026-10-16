@@ -82,7 +82,7 @@
     "Add a Remote First" : {
       "shouldTranslate" : false
     },
-    "After adding a mount, MOUNTLI opens its Finder location." : {
+    "After adding a mount, Mountli opens its Finder location." : {
       "shouldTranslate" : false
     },
     "After adding a mount, enable and open its location in Files." : {
@@ -103,10 +103,10 @@
     "Anyone with this file can read the credentials and tokens for the exported remotes." : {
       "shouldTranslate" : false
     },
-    "Apple manages downloaded files and disk space. MOUNTLI connects each location directly to its storage provider." : {
+    "Apple manages downloaded files and disk space. Mountli connects each location directly to its storage provider." : {
       "shouldTranslate" : false
     },
-    "Apple manages local downloads, materialization, and disk space. MOUNTLI does not create a second file browser." : {
+    "Apple manages local downloads, materialization, and disk space. Mountli does not create a second file browser." : {
       "shouldTranslate" : false
     },
     "Apple preserved local data from the removed location. Review it before deleting anything." : {
@@ -196,10 +196,10 @@
     "Credentials and configuration stay encrypted on this device. Files travel directly between your device and the storage services you choose." : {
       "shouldTranslate" : false
     },
-    "Credentials are stored only in MOUNTLI’s encrypted local vault." : {
+    "Credentials are stored only in Mountli’s encrypted local vault." : {
       "shouldTranslate" : false
     },
-    "Credentials stay in an encrypted local vault and are never sent to MOUNTLI servers." : {
+    "Credentials stay in an encrypted local vault and are never sent to Mountli servers." : {
       "shouldTranslate" : false
     },
     "Crypt remote" : {
@@ -262,7 +262,7 @@
     "Encryption passwords" : {
       "shouldTranslate" : false
     },
-    "Every external file or directory is copied or bookmarked into MOUNTLI’s protected resource store before validation." : {
+    "Every external file or directory is copied or bookmarked into Mountli’s protected resource store before validation." : {
       "shouldTranslate" : false
     },
     "Export Diagnostics…" : {
@@ -361,25 +361,25 @@
     "Location" : {
       "shouldTranslate" : false
     },
-    "MOUNTLI" : {
+    "Mountli" : {
       "shouldTranslate" : false
     },
-    "MOUNTLI couldn’t complete that action" : {
+    "Mountli couldn’t complete that action" : {
       "shouldTranslate" : false
     },
-    "MOUNTLI keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop." : {
+    "Mountli keeps local dirty copies for File Provider retries; it does not run an unbounded retry loop." : {
       "shouldTranslate" : false
     },
-    "MOUNTLI never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically." : {
+    "Mountli never renames imported sections because that would break overlay references. Continue only to replace every colliding section atomically." : {
       "shouldTranslate" : false
     },
-    "MOUNTLI parses without mutating the live vault. Imported section names and overlay references remain exact." : {
+    "Mountli parses without mutating the live vault. Imported section names and overlay references remain exact." : {
       "shouldTranslate" : false
     },
-    "MOUNTLI will relist and match the provider’s stable object ID before renaming anything." : {
+    "Mountli will relist and match the provider’s stable object ID before renaming anything." : {
       "shouldTranslate" : false
     },
-    "MOUNTLI — %arg" : {
+    "Mountli — %arg" : {
       "shouldTranslate" : false
     },
     "Manage" : {
@@ -430,7 +430,7 @@
     "New second password (leave blank to keep current)" : {
       "shouldTranslate" : false
     },
-    "No MOUNTLI account, hosted relay, ads, or telemetry" : {
+    "No Mountli account, hosted relay, ads, or telemetry" : {
       "shouldTranslate" : false
     },
     "No active transfers" : {
@@ -475,7 +475,7 @@
     "Open Issues" : {
       "shouldTranslate" : false
     },
-    "Open MOUNTLI" : {
+    "Open Mountli" : {
       "shouldTranslate" : false
     },
     "Open in Finder" : {
@@ -601,10 +601,10 @@
     "Reset" : {
       "shouldTranslate" : false
     },
-    "Reset MOUNTLI" : {
+    "Reset Mountli" : {
       "shouldTranslate" : false
     },
-    "Reset MOUNTLI…" : {
+    "Reset Mountli…" : {
       "shouldTranslate" : false
     },
     "Reset inaccessible vault" : {
@@ -685,7 +685,7 @@
     "Test Connection" : {
       "shouldTranslate" : false
     },
-    "The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by MOUNTLI." : {
+    "The export is rclone-encrypted with this new passphrase. It is separate from provider passwords and cannot be recovered by Mountli." : {
       "shouldTranslate" : false
     },
     "The primary vault failed its integrity check." : {

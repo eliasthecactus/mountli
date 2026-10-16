@@ -198,7 +198,7 @@ struct RemoteWizard: View {
                 Toggle("Show advanced questions", isOn: $advanced)
             }
             Section {
-                Label("Credentials are stored only in MOUNTLI’s encrypted local vault.", systemImage: "lock.shield")
+                Label("Credentials are stored only in Mountli’s encrypted local vault.", systemImage: "lock.shield")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             Section {

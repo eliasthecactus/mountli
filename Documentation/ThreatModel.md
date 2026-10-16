@@ -9,7 +9,7 @@
 
 ## Trust boundaries
 
-MOUNTLI trusts the signed host and extensions, the Apple operating system and Keychain, the pinned rclone bridge, and storage providers explicitly configured by the user. Provider networks, remote content, imported configuration files, OAuth pages, filenames, and managed preferences are untrusted. MOUNTLI operates no server and treats GitHub and App Store Connect as distribution infrastructure—not runtime data processors.
+Mountli trusts the signed host and extensions, the Apple operating system and Keychain, the pinned rclone bridge, and storage providers explicitly configured by the user. Provider networks, remote content, imported configuration files, OAuth pages, filenames, and managed preferences are untrusted. Mountli operates no server and treats GitHub and App Store Connect as distribution infrastructure—not runtime data processors.
 
 ## Controls
 
@@ -26,8 +26,8 @@ MOUNTLI trusts the signed host and extensions, the Apple operating system and Ke
 
 ## Known residual risks
 
-A compromised operating system or unlocked user account can access materialized content. A configured provider can observe network metadata and content it stores. Backend API behavior may change outside MOUNTLI’s control. Apple File Provider decides cache eviction and may retain protected local materialization. Security-scoped local folders depend on Apple sandbox behavior. rclone and transitive dependencies increase supply-chain and attack surface; monthly updates and weekly scans reduce but do not remove this risk.
+A compromised operating system or unlocked user account can access materialized content. A configured provider can observe network metadata and content it stores. Backend API behavior may change outside Mountli’s control. Apple File Provider decides cache eviction and may retain protected local materialization. Security-scoped local folders depend on Apple sandbox behavior. rclone and transitive dependencies increase supply-chain and attack surface; monthly updates and weekly scans reduce but do not remove this risk.
 
 ## Security invariants
 
-Credentials and raw paths never enter logs, analytics, issue reports, or diagnostics. Remote content never traverses a MOUNTLI-operated service. Every remote mutation is version-checked where the backend exposes versions, journaled, cancellable, and mapped to a specific File Provider error. Update payloads are accepted only after Apple code-signing/notarization checks and Sparkle signature verification.
+Credentials and raw paths never enter logs, analytics, issue reports, or diagnostics. Remote content never traverses a Mountli-operated service. Every remote mutation is version-checked where the backend exposes versions, journaled, cancellable, and mapped to a specific File Provider error. Update payloads are accepted only after Apple code-signing/notarization checks and Sparkle signature verification.

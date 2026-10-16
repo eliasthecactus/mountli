@@ -18,7 +18,7 @@ struct MountliMacApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("MOUNTLI", id: "main") {
+        WindowGroup("Mountli", id: "main") {
             AppRootView(model: model)
                 .frame(minWidth: 850, minHeight: 560)
                 .onOpenURL(perform: model.handleRecoveryURL)
@@ -29,7 +29,7 @@ struct MountliMacApp: App {
                 Button("New Remote…") { model.showingAddRemote = true }.keyboardShortcut("n", modifiers: .command)
                 Button("New Mount…") { model.showingAddMount = true }.keyboardShortcut("n", modifiers: [.command, .shift]).disabled(model.remotes.isEmpty)
             }
-            CommandMenu("MOUNTLI") {
+            CommandMenu("Mountli") {
                 Button("Refresh All") { model.run { try await model.refreshAll() } }.keyboardShortcut("r", modifiers: .command)
                 Button("Activity") { model.requestedSection = "Activity" }.keyboardShortcut("a", modifiers: [.command, .option])
                 Button("Issues") { model.requestedSection = "Issues" }.keyboardShortcut("i", modifiers: [.command, .shift])
@@ -48,7 +48,7 @@ struct MountliMacApp: App {
             MenuStatusView(model: model)
         } label: {
             Label {
-                Text(model.mounts.isEmpty ? "MOUNTLI" : "MOUNTLI — \(model.overallStatus.label)")
+                Text(model.mounts.isEmpty ? "Mountli" : "Mountli — \(model.overallStatus.label)")
             } icon: {
                 if let menuBarSymbol {
                     Image(systemName: menuBarSymbol)
@@ -88,7 +88,7 @@ private struct MenuStatusView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 if model.mounts.isEmpty {
-                    Label("MOUNTLI", systemImage: "externaldrive").font(.headline)
+                    Label("Mountli", systemImage: "externaldrive").font(.headline)
                 } else {
                     Label(model.overallStatus.label, systemImage: model.overallStatus.systemImage)
                         .font(.headline)
@@ -167,7 +167,7 @@ private struct MenuStatusView: View {
                 Button("Refresh All", systemImage: "arrow.clockwise") { model.run { try await model.refreshAll() } }.disabled(model.mounts.isEmpty)
             }
             HStack {
-                Button("Open MOUNTLI") {
+                Button("Open Mountli") {
                     openWindow(id: "main")
                     NSApplication.shared.activate()
                 }

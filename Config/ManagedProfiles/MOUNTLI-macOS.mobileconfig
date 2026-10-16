@@ -9,7 +9,7 @@
       <key>PayloadVersion</key><integer>1</integer>
       <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.macos.preferences</string>
       <key>PayloadUUID</key><string>50E5656B-D266-4687-A955-5CB285E22EB9</string>
-      <key>PayloadDisplayName</key><string>MOUNTLI Managed Preferences</string>
+      <key>PayloadDisplayName</key><string>Mountli Managed Preferences</string>
       <key>PayloadContent</key>
       <dict>
         <key>ch.benavo.mountli</key>
@@ -39,8 +39,8 @@
   <key>PayloadVersion</key><integer>1</integer>
   <key>PayloadIdentifier</key><string>ch.benavo.mountli.managed.macos</string>
   <key>PayloadUUID</key><string>83B35426-96BE-457E-92FB-BD3B5259E2CA</string>
-  <key>PayloadDisplayName</key><string>MOUNTLI macOS Managed Policy</string>
+  <key>PayloadDisplayName</key><string>Mountli macOS Managed Policy</string>
   <key>PayloadOrganization</key><string>Example Organization</string>
-  <key>PayloadDescription</key><string>Example restriction-only MOUNTLI managed preferences profile.</string>
+  <key>PayloadDescription</key><string>Example restriction-only Mountli managed preferences profile.</string>
 </dict>
 </plist>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
-  <title id="title">MOUNTLI mark</title>
+  <title id="title">Mountli mark</title>
   <desc id="description">A mountain and upward arrow joining two storage supports.</desc>
   <path fill="#000" fill-rule="evenodd" d="M128 28 98 76 79 54 18 166h32l32-59 25 29 21-34 21 34 25-29 32 59h32L177 54l-19 22-30-48Zm0 76-36 45h21v18H64l-35 18 35 18 43-14h6v25h30v-25h6l43 14 35-18-35-18h-49v-18h21l-36-45Zm-15 45h30v27h-30v-27Z"/>
 </svg>

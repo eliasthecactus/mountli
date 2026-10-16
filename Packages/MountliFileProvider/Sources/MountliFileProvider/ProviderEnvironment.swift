@@ -643,7 +643,7 @@ public actor ProviderEnvironment {
             itemID: item.id,
             kind: .conflict,
             diagnosticCode: "provider.versionConflict.\(operationKind.rawValue)",
-            message: "The remote item changed before MOUNTLI could safely apply the requested operation. No overwrite or deletion was attempted.",
+            message: "The remote item changed before Mountli could safely apply the requested operation. No overwrite or deletion was attempted.",
             retryable: operationKind != .delete,
             remoteObjectID: hasStableIdentity ? item.remoteID : nil,
             remotePath: nil,

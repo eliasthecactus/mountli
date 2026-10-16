@@ -506,7 +506,7 @@ extension BridgeFailure: LocalizedError {
             case .notFound: "The requested file or folder does not exist on the remote."
             case .alreadyExists: "An item with this name already exists on the remote."
             case .permissionDenied: "The storage provider denied access to this location."
-            case .conflict: "The remote item changed while MOUNTLI was working on it."
+            case .conflict: "The remote item changed while Mountli was working on it."
             case .unsupported: "This storage provider does not support that operation."
             case .cancelled: "The operation was cancelled."
             case .internal: "rclone reported an unexpected error."

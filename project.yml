@@ -57,7 +57,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-macOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-macOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)
@@ -91,7 +91,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-macOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-macOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)
@@ -124,7 +124,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.benavo.mountli
-        PRODUCT_NAME: MOUNTLI
+        PRODUCT_NAME: Mountli
         INFOPLIST_FILE: Config/Info/Mountli-iOS.plist
         CODE_SIGN_ENTITLEMENTS: Config/Entitlements/Mountli-iOS.entitlements
         INFOPLIST_KEY_MOUNTLIKeychainAccessGroup: $(MOUNTLI_KEYCHAIN_ACCESS_GROUP)

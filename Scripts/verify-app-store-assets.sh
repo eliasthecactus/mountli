@@ -38,7 +38,7 @@ for prefix, expected_size in required_sizes.items():
 
 metadata = root / "fastlane/metadata/en-US"
 expected_text = {
-    "name.txt": "MOUNTLI",
+    "name.txt": "Mountli",
     "subtitle.txt": "Rclone in Finder & Files",
     "privacy_url.txt": "https://benavo.ch/privacy",
     "support_url.txt": "https://benavo.ch/apps/mountli",

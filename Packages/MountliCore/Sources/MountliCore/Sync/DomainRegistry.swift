@@ -17,7 +17,7 @@ extension DomainRegistryError: LocalizedError {
         case .dirtyOperations(let count):
             "\(count) change\(count == 1 ? " is" : "s are") still waiting to upload. Wait for them to finish, then try again."
         case .orphanDomain:
-            "Finder or Files still shows a location that MOUNTLI no longer manages."
+            "Finder or Files still shows a location that Mountli no longer manages."
         }
     }
 }
@@ -123,7 +123,7 @@ public actor DomainRegistry {
         }
     }
 
-    /// Removes a MOUNTLI-owned domain that no longer has a matching mount definition.
+    /// Removes a Mountli-owned domain that no longer has a matching mount definition.
     public func removeOrphan(identifier: String) async throws {
         guard identifier.hasPrefix("mountli."),
             let domain = try await installedDomains().first(where: { $0.identifier.rawValue == identifier })

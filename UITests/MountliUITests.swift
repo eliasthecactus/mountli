@@ -24,7 +24,7 @@ final class MountliUITests: XCTestCase {
             "-MOUNTLIScreenshotFixture",
         ]
         application.launch()
-        XCTAssertTrue(application.staticTexts["Welcome to MOUNTLI"].waitForExistence(timeout: 30))
+        XCTAssertTrue(application.staticTexts["Welcome to Mountli"].waitForExistence(timeout: 30))
 
         #if os(iOS)
             let screenshot = XCUIScreen.main.screenshot()
@@ -32,7 +32,7 @@ final class MountliUITests: XCTestCase {
             let screenshot = application.windows.firstMatch.screenshot()
         #endif
         let attachment = XCTAttachment(screenshot: screenshot)
-        attachment.name = "MOUNTLI-App-Store"
+        attachment.name = "Mountli-App-Store"
         attachment.lifetime = .keepAlways
         add(attachment)
     }

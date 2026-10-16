@@ -12,7 +12,7 @@ extension ResourceStoreError: LocalizedError {
         case .missing:
             "A file this remote depends on is missing. Relink it in Settings › Protected resource files."
         case .staleBookmark:
-            "MOUNTLI lost access to a folder this remote uses. Relink it in Settings › Protected resource files."
+            "Mountli lost access to a folder this remote uses. Relink it in Settings › Protected resource files."
         case .invalidSelection(let message):
             message
         }

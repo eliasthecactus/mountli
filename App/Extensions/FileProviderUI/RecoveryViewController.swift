@@ -10,10 +10,10 @@ import Foundation
 
         override func loadView() {
             let root = NSView(frame: NSRect(x: 0, y: 0, width: 420, height: 180))
-            let label = NSTextField(labelWithString: "Open MOUNTLI to reconnect this location or resolve its sync issue.")
+            let label = NSTextField(labelWithString: "Open Mountli to reconnect this location or resolve its sync issue.")
             label.maximumNumberOfLines = 3
             label.alignment = .center
-            let button = NSButton(title: "Open MOUNTLI", target: self, action: #selector(openApp))
+            let button = NSButton(title: "Open Mountli", target: self, action: #selector(openApp))
             let stack = NSStackView(views: [label, button])
             stack.orientation = .vertical
             stack.spacing = 18
@@ -51,11 +51,11 @@ import Foundation
             super.viewDidLoad()
             view.backgroundColor = .systemBackground
             let label = UILabel()
-            label.text = "Open MOUNTLI to reconnect this location or resolve its sync issue."
+            label.text = "Open Mountli to reconnect this location or resolve its sync issue."
             label.numberOfLines = 0
             label.textAlignment = .center
             let button = UIButton(type: .system)
-            button.setTitle("Open MOUNTLI", for: .normal)
+            button.setTitle("Open Mountli", for: .normal)
             button.addTarget(self, action: #selector(openApp), for: .touchUpInside)
             let stack = UIStackView(arrangedSubviews: [label, button])
             stack.axis = .vertical

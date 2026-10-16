@@ -140,7 +140,7 @@ jobs:
             artifact|upload) ;;
             *) echo "APP_STORE_DELIVERY_MODE must be artifact or upload" >&2; exit 1 ;;
           esac
-      - uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
+      - uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
         with:
           p12-file-base64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
@@ -265,7 +265,7 @@ jobs:
           mise exec -- bundle config set path .bundle
           mise exec -- bundle config set frozen true
           mise exec -- bundle install
-      - uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3.0.0
+      - uses: apple-actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7.0.0
         with:
           p12-file-base64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
           p12-password: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}

@@ -58,8 +58,15 @@ private struct OnboardingView: View {
     let model: MountliAppModel
     let finish: () -> Void
     @State private var step = 0
+    @State private var notificationsEnabled = false
+    @State private var notificationsDenied = false
 
-    private let titles = ["Welcome to MOUNTLI", "Add your storage", "Stay informed", "Add to Finder & Files"]
+    private let pages: [(title: String, icon: String)] = [
+        ("Welcome to MOUNTLI", "sparkles"),
+        ("Add your storage", "network.badge.shield.half.filled"),
+        ("Stay informed", "bell.badge"),
+        ("Add to \(OnboardingView.filesApp)", "externaldrive.badge.plus"),
+    ]
 
     private var isCompactPhone: Bool {
         #if os(iOS)
@@ -71,95 +78,37 @@ private struct OnboardingView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: isCompactPhone ? 16 : 24) {
-                Spacer(minLength: isCompactPhone ? 8 : 24)
-                MountliMark(size: isCompactPhone ? 60 : 72)
-                Text(titles[step])
-                    .font((isCompactPhone ? Font.title : Font.largeTitle).bold())
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                Group {
-                    switch step {
-                    case 0:
-                        VStack(spacing: 12) {
-                            Text("Rclone in Finder & Files").font(.title3)
-                            Label("No MOUNTLI account, hosted relay, ads, or telemetry", systemImage: "hand.raised.fill")
-                            Text(
-                                "Credentials and configuration stay encrypted on this device. Files travel directly between your device and the storage services you choose."
-                            )
-                        }
-                    case 1:
-                        VStack(spacing: 14) {
-                            Text(
-                                "Create a remote with rclone’s native setup questions, or import an existing rclone.conf. Every device is configured independently."
-                            )
-                            Button("Add a Remote", systemImage: "plus.circle") {
-                                model.showingAddRemote = true
-                                step = 2
-                            }.buttonStyle(.borderedProminent)
-                                .disabled(model.isLoading || model.catalog.isEmpty)
-                            Button("Import rclone.conf", systemImage: "square.and.arrow.down") {
-                                model.showingConfigImport = true
-                                step = 2
-                            }
-                            .disabled(model.isLoading || !model.managedPolicy.allowConfigImport)
-                        }
-                    case 2:
-                        VStack(spacing: 14) {
-                            Text("Notifications are optional and requested only if you enable alerts for action-required events or completed transfers.")
-                            Button("Enable Action Required Alerts") {
-                                Task {
-                                    let allowed = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) == true
-                                    guard allowed else { return }
-                                    var settings = model.snapshot.document.settings.notifications
-                                    settings.actionRequired = true
-                                    try? await model.setNotificationSettings(settings)
-                                }
-                            }
-                        }
-                    default:
-                        VStack(spacing: 12) {
-                            #if os(macOS)
-                                Label("After adding a mount, MOUNTLI opens its Finder location.", systemImage: "finder")
-                            #else
-                                Label("After adding a mount, enable and open its location in Files.", systemImage: "folder")
-                            #endif
-                            Text("Apple manages local downloads, materialization, and disk space. MOUNTLI does not create a second file browser.")
-                            Group {
-                                #if os(macOS)
-                                    Button("Add to Finder", systemImage: "externaldrive.badge.plus") {
-                                        model.showingAddMount = true
-                                    }
-                                #else
-                                    Button("Add to Files", systemImage: "externaldrive.badge.plus") {
-                                        model.showingAddMount = true
-                                    }
-                                #endif
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(model.remotes.isEmpty)
+            ScrollView {
+                VStack(spacing: isCompactPhone ? 18 : 24) {
+                    Group {
+                        if step == 0 {
+                            MountliMark(size: isCompactPhone ? 72 : 88)
+                        } else {
+                            Image(systemName: pages[step].icon)
+                                .font(.system(size: isCompactPhone ? 30 : 36, weight: .semibold))
+                                .foregroundStyle(Color.mountliEmerald)
+                                .frame(width: isCompactPhone ? 72 : 88, height: isCompactPhone ? 72 : 88)
+                                .background(Color.mountliEmerald.opacity(0.12), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                         }
                     }
+                    .padding(.top, isCompactPhone ? 12 : 32)
+                    Text(pages[step].title)
+                        .font((isCompactPhone ? Font.title : Font.largeTitle).bold())
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    content
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: isCompactPhone ? 360 : 520)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: isCompactPhone ? 360 : 560)
-                .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: isCompactPhone ? 8 : 24)
-                HStack {
-                    if step > 0 { Button("Back") { step -= 1 } }
-                    Spacer()
-                    if step == 3 {
-                        Button("Get Started", action: finish).buttonStyle(.borderedProminent)
-                    } else {
-                        Button("Continue") { step += 1 }.buttonStyle(.borderedProminent)
-                    }
-                }
+                .padding(isCompactPhone ? 20 : 32)
+                .frame(maxWidth: .infinity)
+                .animation(.default, value: step)
             }
-            .padding(isCompactPhone ? 20 : 32)
-            .navigationTitle("Step \(step + 1) of 4")
+            .safeAreaInset(edge: .bottom) { footer }
+            .background(Color.mountliCanvas)
             #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+                .toolbar(.hidden, for: .navigationBar)
             #endif
         }
         .sheet(isPresented: Binding(get: { model.showingAddRemote }, set: { model.showingAddRemote = $0 })) {
@@ -171,6 +120,150 @@ private struct OnboardingView: View {
         .sheet(isPresented: Binding(get: { model.showingAddMount }, set: { model.showingAddMount = $0 })) {
             MountWizard(model: model)
         }
+        .task {
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            notificationsEnabled = settings.authorizationStatus == .authorized && model.snapshot.document.settings.notifications.actionRequired
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch step {
+        case 0:
+            VStack(spacing: 16) {
+                Text("Rclone in Finder & Files").font(.title3).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    feature("lock.shield", "Credentials and configuration stay encrypted on this device.")
+                    feature("arrow.left.arrow.right", "Files travel directly between this device and your storage.")
+                    feature("hand.raised", "No MOUNTLI account, relay server, ads, or tracking.")
+                }
+                .multilineTextAlignment(.leading)
+                .padding(16)
+                .background(Color.mountliCard, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+        case 1:
+            VStack(spacing: 14) {
+                Text("Connect a provider using rclone’s own setup questions, or import an rclone.conf you already have.")
+                    .foregroundStyle(.secondary)
+                if !model.remotes.isEmpty {
+                    Label(
+                        model.remotes.count == 1 ? "\(model.remotes[0].displayName) is ready" : "\(model.remotes.count) remotes are ready",
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .foregroundStyle(Color.mountliEmerald)
+                    .font(.headline)
+                }
+                Button(model.remotes.isEmpty ? "Add a Remote" : "Add Another Remote", systemImage: "plus.circle") {
+                    model.showingAddRemote = true
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(model.isLoading || model.catalog.isEmpty)
+                Button("Import rclone.conf", systemImage: "square.and.arrow.down") { model.showingConfigImport = true }
+                    .disabled(model.isLoading || !model.managedPolicy.allowConfigImport)
+                if model.isLoading { ProgressView("Loading providers…").controlSize(.small) }
+            }
+        case 2:
+            VStack(spacing: 14) {
+                Text("Get a notification when a location needs you, for example when a sign-in expires. You can change this later in Settings.")
+                    .foregroundStyle(.secondary)
+                if notificationsEnabled {
+                    Label("Alerts are on", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(Color.mountliEmerald)
+                        .font(.headline)
+                } else {
+                    Button("Enable Alerts", systemImage: "bell") { enableNotifications() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                    if notificationsDenied {
+                        Text("Notifications are turned off for MOUNTLI in System Settings.")
+                            .font(.footnote).foregroundStyle(.orange)
+                    }
+                }
+            }
+        default:
+            VStack(spacing: 14) {
+                Text(
+                    "Choose a remote folder to show in \(Self.filesApp). Files download when you open them and upload when you save. Apple manages local storage."
+                )
+                .foregroundStyle(.secondary)
+                if model.remotes.isEmpty {
+                    Text("Add a remote first, or skip this and do it later.").font(.footnote).foregroundStyle(.secondary)
+                } else if !model.mounts.isEmpty {
+                    Label("\(model.mounts[0].displayName) is in \(Self.filesApp)", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(Color.mountliEmerald)
+                        .font(.headline)
+                }
+                Button("Add to \(Self.filesApp)", systemImage: "externaldrive.badge.plus") { model.showingAddMount = true }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(model.remotes.isEmpty)
+            }
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            if step > 0 {
+                Button("Back") { step -= 1 }
+            } else {
+                Button("Skip") { finish() }
+            }
+            Spacer()
+            HStack(spacing: 8) {
+                ForEach(pages.indices, id: \.self) { index in
+                    Capsule()
+                        .fill(index == step ? Color.mountliEmerald : Color.secondary.opacity(0.3))
+                        .frame(width: index == step ? 20 : 8, height: 8)
+                }
+            }
+            .accessibilityElement()
+            .accessibilityLabel("Step \(step + 1) of \(pages.count)")
+            Spacer()
+            if step == pages.count - 1 {
+                Button("Get Started", action: finish).buttonStyle(.borderedProminent)
+            } else {
+                Button("Continue") { step += 1 }.buttonStyle(.borderedProminent)
+            }
+        }
+        .controlSize(.large)
+        .padding(.horizontal, isCompactPhone ? 20 : 32)
+        .padding(.vertical, 14)
+        .background(.bar)
+        .animation(.default, value: step)
+    }
+
+    private func feature(_ icon: String, _ text: String) -> some View {
+        Label {
+            Text(text).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: icon).foregroundStyle(Color.mountliEmerald).frame(width: 24)
+        }
+    }
+
+    private func enableNotifications() {
+        Task {
+            let allowed = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) == true
+            guard allowed else {
+                notificationsDenied = true
+                return
+            }
+            var settings = model.snapshot.document.settings.notifications
+            settings.actionRequired = true
+            do {
+                try await model.setNotificationSettings(settings)
+                notificationsEnabled = true
+            } catch {
+                model.presentedError = error.localizedDescription
+            }
+        }
+    }
+
+    static var filesApp: String {
+        #if os(macOS)
+            "Finder"
+        #else
+            "Files"
+        #endif
     }
 }
 
@@ -259,7 +352,9 @@ struct ContentView: View {
         NavigationSplitView {
             List(selection: $selection) {
                 ForEach(SidebarSection.allCases.filter { $0 != .settings }) { section in
-                    Label(section.rawValue, systemImage: section.icon).tag(section)
+                    Label(section.rawValue, systemImage: section.icon)
+                        .badge(badge(for: section))
+                        .tag(section)
                 }
                 Section {
                     Label(SidebarSection.settings.rawValue, systemImage: SidebarSection.settings.icon)
@@ -269,22 +364,39 @@ struct ContentView: View {
             .navigationTitle("MOUNTLI")
             .safeAreaInset(edge: .top) { brandHeader }
         } detail: {
-            selectedView(selection ?? .overview)
-                .toolbar {
-                    ToolbarItemGroup(placement: .primaryAction) {
-                        #if os(macOS)
-                            Menu("Add", systemImage: "plus") {
-                                Button("Remote…") { model.showingAddRemote = true }
-                                Button("Mount…") { model.showingAddMount = true }.disabled(model.remotes.isEmpty)
-                            }
-                            Button("Refresh All", systemImage: "arrow.clockwise") { model.run { try await model.refreshAll() } }
-                            Button(allPaused ? "Resume All" : "Pause All", systemImage: allPaused ? "play.fill" : "pause.fill") {
-                                model.run { try await model.setAllPaused(!allPaused) }
-                            }
-                        #endif
-                        StatusPill(status: model.overallStatus)
+            // Each section gets its own stack so mount and remote rows can push their detail views.
+            NavigationStack {
+                selectedView(selection ?? .overview)
+                    .toolbar {
+                        ToolbarItemGroup(placement: .primaryAction) {
+                            #if os(macOS)
+                                Menu("Add", systemImage: "plus") {
+                                    Button("Remote…") { model.showingAddRemote = true }
+                                    Button("Mount…") { model.showingAddMount = true }.disabled(model.remotes.isEmpty)
+                                    Divider()
+                                    Button("Import rclone.conf…") { model.showingConfigImport = true }
+                                        .disabled(!model.managedPolicy.allowConfigImport)
+                                }
+                                if !model.mounts.isEmpty {
+                                    Button("Refresh All", systemImage: "arrow.clockwise") { model.run { try await model.refreshAll() } }
+                                    Button(allPaused ? "Resume All" : "Pause All", systemImage: allPaused ? "play.fill" : "pause.fill") {
+                                        model.run { try await model.setAllPaused(!allPaused) }
+                                    }
+                                }
+                            #endif
+                            if !model.mounts.isEmpty { StatusPill(status: model.overallStatus) }
+                        }
                     }
-                }
+            }
+            .id(selection)
+        }
+    }
+
+    private func badge(for section: SidebarSection) -> Int {
+        switch section {
+        case .issues: model.unresolvedIssueCount
+        case .activity: model.operationalStates.values.reduce(0) { $0 + $1.activeTransfers }
+        default: 0
         }
     }
 
@@ -297,6 +409,7 @@ struct ContentView: View {
                 }
                 .tabItem { Label("Overview", systemImage: SidebarSection.overview.icon) }
                 .tag(SidebarSection.overview)
+                .badge(model.unresolvedIssueCount)
                 NavigationStack { MountsView(model: model) }
                     .tabItem { Label("Mounts", systemImage: SidebarSection.mounts.icon) }
                     .tag(SidebarSection.mounts)
@@ -331,31 +444,6 @@ struct ContentView: View {
             Spacer()
         }
         .padding(.horizontal).padding(.top, 8)
-    }
-}
-
-struct OverviewView: View {
-    @Bindable var model: MountliAppModel
-    var body: some View {
-        List {
-            Section("Status") {
-                LabeledContent("All mounts") { StatusPill(status: model.overallStatus) }
-                LabeledContent("Active transfers", value: "\(model.operationalStates.values.reduce(0) { $0 + $1.activeTransfers })")
-                LabeledContent("Requires action", value: "\(model.unresolvedIssueCount)")
-            }
-            Section("Quick actions") {
-                Button("Add Remote", systemImage: "network.badge.shield.half.filled") { model.showingAddRemote = true }
-                Button("Add Mount", systemImage: "externaldrive.badge.plus") { model.showingAddMount = true }
-                    .disabled(model.remotes.isEmpty)
-                Button("Import rclone.conf", systemImage: "square.and.arrow.down") { model.showingConfigImport = true }
-                    .disabled(!model.managedPolicy.allowConfigImport)
-            }
-            Section("Manage") {
-                NavigationLink("Remotes", destination: RemotesView(model: model))
-                NavigationLink("Issues", destination: IssuesView(model: model))
-            }
-        }
-        .navigationTitle("Overview")
     }
 }
 
@@ -432,6 +520,7 @@ private struct MountDetailView: View {
     @State private var showingRemoval = false
     @State private var capabilities: BackendCapabilities?
     @State private var quota: QuotaUsage?
+    @State private var probeError: String?
 
     private var mount: MountDefinition? { model.mounts.first { $0.id == mountID } }
     private var remote: RemoteProfile? { mount.flatMap { value in model.remotes.first { $0.id == value.remoteID } } }
@@ -459,7 +548,13 @@ private struct MountDetailView: View {
                     .disabled(!model.managedPolicy.allowCellular)
                     if !model.managedPolicy.allowCellular { Text("Managed by your organization").font(.caption).foregroundStyle(.secondary) }
                 }
-                if let capabilities {
+                if let probeError {
+                    Section("Capabilities") {
+                        Label(probeError, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else if let capabilities {
                     Section("Capabilities") {
                         LabeledContent("Backend access", value: capabilities.readOnly ? "Read only" : "Read and write")
                         LabeledContent("Server-side move", value: capabilities.serverSideMove ? "Available" : "Unavailable")
@@ -480,12 +575,15 @@ private struct MountDetailView: View {
                         rename = mount.displayName
                         showingRename = true
                     }
-                    Button("Remove Mount", systemImage: "trash", role: .destructive) { showingRemoval = true }
+                }
+                Section {
+                    Button("Remove Mount…", systemImage: "trash", role: .destructive) { showingRemoval = true }
                 }
             } else {
                 ContentUnavailableView("Mount removed", systemImage: "externaldrive.badge.xmark")
             }
         }
+        .formStyle(.grouped)
         .navigationTitle(mount?.displayName ?? "Mount")
         .alert("Rename Mount", isPresented: $showingRename) {
             TextField("Name", text: $rename)
@@ -514,8 +612,10 @@ private struct MountDetailView: View {
                 let result = try await model.probeMount(remoteID: mount.remoteID, root: mount.root)
                 capabilities = result
                 if result.reportsQuota { quota = try? await model.quota(remoteID: mount.remoteID, root: mount.root) }
+                probeError = nil
             } catch {
                 capabilities = nil
+                probeError = error.localizedDescription
             }
         }
     }
@@ -562,7 +662,8 @@ struct RemotesView: View {
                                 Text("\(remote.backendType) · \(remote.engineName)").font(.subheadline).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("\(model.mounts.filter { $0.remoteID == remote.id }.count) mounts").font(.caption).foregroundStyle(.secondary)
+                            Text("^[\(model.mounts.filter { $0.remoteID == remote.id }.count) mount](inflect: true)")
+                                .font(.caption).foregroundStyle(.secondary)
                         }.padding(.vertical, 6)
                     }
                 }
@@ -577,6 +678,8 @@ private struct RemoteDetailView: View {
     let model: MountliAppModel
     let remoteID: UUID
     @State private var showingExport = false
+    @State private var confirmingDelete = false
+    @State private var checking = false
     @State private var connectionMessage: String?
     private var remote: RemoteProfile? { model.remotes.first { $0.id == remoteID } }
     private var dependentMounts: [MountDefinition] { model.mounts.filter { $0.remoteID == remoteID } }
@@ -597,20 +700,38 @@ private struct RemoteDetailView: View {
                     ForEach(dependentOverlays) { Label($0.displayName, systemImage: "point.3.connected.trianglepath.dotted") }
                 }
                 Section("Actions") {
-                    Button("Test Connection", systemImage: "checkmark.circle") { check(remote, reconnect: false) }
+                    Button(checking ? "Testing…" : "Test Connection", systemImage: "checkmark.circle") { check(remote, reconnect: false) }
+                        .disabled(checking)
                     Button("Reconnect", systemImage: "bolt.horizontal.circle") { check(remote, reconnect: true) }
+                        .disabled(checking)
                     Button("Edit", systemImage: "pencil") {
                         model.selectedRemoteID = remote.id
                         model.showingAddRemote = true
                     }
                     Button("Export Selected…", systemImage: "square.and.arrow.up") { showingExport = true }
                         .disabled(!model.managedPolicy.allowConfigExport)
-                    Button("Delete", systemImage: "trash", role: .destructive) { model.run { try await model.deleteRemote(remote) } }
-                        .disabled(!dependentMounts.isEmpty || !dependentOverlays.isEmpty)
                 }
+                Section {
+                    Button("Delete Remote…", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+                        .disabled(!dependentMounts.isEmpty || !dependentOverlays.isEmpty)
+                } footer: {
+                    if !dependentMounts.isEmpty || !dependentOverlays.isEmpty {
+                        Text("Remove the mounts and overlays listed above before deleting this remote.")
+                    }
+                }
+            } else {
+                ContentUnavailableView("Remote removed", systemImage: "network.slash")
             }
         }
+        .formStyle(.grouped)
         .navigationTitle(remote?.displayName ?? "Remote")
+        .confirmationDialog("Delete “\(remote?.displayName ?? "remote")”?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            if let remote {
+                Button("Delete Remote", role: .destructive) { model.run { try await model.deleteRemote(remote) } }
+            }
+        } message: {
+            Text("Its encrypted credentials are removed from this device. Data on the storage provider is not touched.")
+        }
         .sheet(isPresented: $showingExport) { if let remote { ConfigExportFlow(model: model, selectedRemote: remote) } }
         .alert(
             "Connection",
@@ -626,7 +747,9 @@ private struct RemoteDetailView: View {
     }
 
     private func check(_ remote: RemoteProfile, reconnect: Bool) {
+        checking = true
         Task {
+            defer { checking = false }
             do {
                 if reconnect { try await model.reconnect(remote) } else { try await model.testConnection(remote) }
                 connectionMessage = reconnect ? "MOUNTLI reconnected this remote and refreshed its mounts." : "Connection successful."
@@ -705,11 +828,13 @@ struct ActivityView: View {
                                         let mount = model.mounts.first(where: { $0.id == operation.mountID })
                                     {
                                         Button("Retry") { model.run { try await model.refresh(mount) } }
+                                            .buttonStyle(.borderless)
                                         if let issue = issue(for: operation) {
                                             Button("View Issue") {
                                                 model.requestedIssueID = issue.id
                                                 model.requestedSection = "Issues"
                                             }
+                                            .buttonStyle(.borderless)
                                         }
                                     } else {
                                         Text(operation.outcome.label).font(.caption.bold()).foregroundStyle(.secondary)
@@ -836,17 +961,20 @@ private struct ActiveOperationRow: View {
                 Button(model.cancellationRequestedIDs.contains(operation.id) ? "Cancellation Requested" : "Cancel", role: .destructive) {
                     Task { await model.cancelOperation(operation) }
                 }
+                .buttonStyle(.borderless)
                 .disabled(model.cancellationRequestedIDs.contains(operation.id))
             }
             if operation.totalBytes > 0 { ProgressView(value: Double(operation.completedBytes), total: Double(operation.totalBytes)) }
             HStack {
                 Text(
-                    "\(ByteCountFormatter.string(fromByteCount: operation.completedBytes, countStyle: .file)) of \(ByteCountFormatter.string(fromByteCount: operation.totalBytes, countStyle: .file))"
+                    operation.totalBytes > 0
+                        ? "\(ByteCountFormatter.string(fromByteCount: operation.completedBytes, countStyle: .file)) of \(ByteCountFormatter.string(fromByteCount: operation.totalBytes, countStyle: .file))"
+                        : ByteCountFormatter.string(fromByteCount: operation.completedBytes, countStyle: .file)
                 )
                 Spacer()
                 if speed > 0 { Text("\(ByteCountFormatter.string(fromByteCount: Int64(speed), countStyle: .file))/s") }
                 if let eta {
-                    Text("· \(Int(eta) / 60)m \(Int(eta) % 60)s left")
+                    Text("· \(Duration.seconds(eta).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))) left")
                 }
             }.font(.caption).foregroundStyle(.secondary)
         }
@@ -883,7 +1011,7 @@ struct IssuesView: View {
                         Section("Vault recovery") {
                             Label("The primary vault failed its integrity check.", systemImage: "lock.trianglebadge.exclamationmark").foregroundStyle(.red)
                             Text("A verified backup from revision \(candidate.revision) is available.").font(.caption).foregroundStyle(.secondary)
-                            Button("Restore verified backup") { model.run { try await model.restoreVaultBackup() } }
+                            Button("Restore Verified Backup") { model.run { try await model.restoreVaultBackup() } }
                         }
                     }
                     if model.vaultResetRequired {
@@ -913,8 +1041,15 @@ struct IssuesView: View {
                             IssueCard(title: "\(mount.displayName) is missing from Finder & Files", code: "DOMAIN_MISSING", mount: mount, model: model) {
                                 Button("Restore") { model.run { try await model.restoreDomain(mount) } }
                             }
+                        } else if issue.hasPrefix("orphan:") {
+                            let identifier = String(issue.dropFirst("orphan:".count))
+                            IssueCard(
+                                title: "\(Self.filesLabel) shows a location MOUNTLI no longer manages", code: "DOMAIN_ORPHANED", mount: nil, model: model
+                            ) {
+                                Button("Remove from \(Self.filesLabel)") { model.run { try await model.removeOrphanDomain(identifier) } }
+                            }
                         } else {
-                            IssueCard(title: "Unrecognized File Provider domain", code: issue, mount: nil, model: model) { EmptyView() }
+                            IssueCard(title: issue, code: "DOMAIN_UNKNOWN", mount: nil, model: model) { EmptyView() }
                         }
                     }
                     ForEach(model.policyIssues) { issue in
@@ -1076,17 +1211,25 @@ private struct IssueCard<Actions: View>: View {
                     LabeledContent("Remote path", value: remotePath)
                 } else {
                     LabeledContent("Affected item", value: redactedPathToken ?? "Hidden")
-                    Button("Reveal Sensitive Path") { showingSensitivePath = true }
+                    Button("Reveal Sensitive Path") { showingSensitivePath = true }.buttonStyle(.borderless)
                 }
             }
             Text(code).font(.caption.monospaced()).foregroundStyle(.secondary)
-            HStack {
-                actions()
-                Button("Copy Support Details") {
-                    copy("MOUNTLI issue \(code)\nMount: \(mount?.id.uuidString.lowercased() ?? "none")")
-                }
+            // Borderless buttons: in an iOS List row, default-styled buttons all fire on any tap,
+            // which could trigger a destructive resolution when copying support details.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 14) { buttons }
+                VStack(alignment: .leading, spacing: 10) { buttons }
             }
+            .buttonStyle(.borderless)
         }.padding(.vertical, 4)
+    }
+
+    @ViewBuilder private var buttons: some View {
+        actions()
+        Button("Copy Support Details") {
+            copy("MOUNTLI issue \(code)\nMount: \(mount?.id.uuidString.lowercased() ?? "none")")
+        }
     }
 
     private func copy(_ value: String) {
@@ -1212,116 +1355,165 @@ private struct MountWizard: View {
     let model: MountliAppModel
     @State private var remoteID: UUID?
     @State private var name = ""
+    @State private var nameEdited = false
     @State private var root = ""
     @State private var readOnly = false
     @State private var capabilities: BackendCapabilities?
     @State private var quota: QuotaUsage?
+    @State private var probeError: String?
     @State private var saving = false
     @State private var probing = false
+    @State private var probeGeneration = 0
     @State private var showingDirectoryImporter = false
     @State private var showingRemoteBrowser = false
     @State private var localDirectory: URL?
+    @State private var error: String?
 
     private var remote: RemoteProfile? { remoteID.flatMap { id in model.remotes.first { $0.id == id } } }
     private var usesLocalDirectory: Bool { remote?.backendType == "local" }
     private var forcedReadOnly: Bool { capabilities?.readOnly == true || model.managedPolicy.forceReadOnly }
+    private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var nameInUse: Bool {
+        model.mounts.contains { $0.displayName.localizedCaseInsensitiveCompare(trimmedName) == .orderedSame }
+    }
+    private var canAdd: Bool {
+        remoteID != nil && !trimmedName.isEmpty && !nameInUse && !saving && capabilities != nil
+            && !(usesLocalDirectory && localDirectory == nil)
+    }
+    private var probeKey: String { "\(remoteID?.uuidString ?? "")|\(root)|\(localDirectory?.path ?? "")|\(probeGeneration)" }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Remote") {
+                Section {
                     Picker("Remote", selection: $remoteID) {
                         Text("Choose a remote").tag(UUID?.none)
                         ForEach(model.remotes) { Text($0.displayName).tag(Optional($0.id)) }
                     }
+                    TextField("Name in \(Self.filesLabel)", text: $name)
+                        .onChange(of: name) { _, value in if value != remote?.displayName { nameEdited = true } }
+                    if nameInUse {
+                        Text("Another mount already uses this name.").font(.caption).foregroundStyle(.red)
+                    }
+                } header: {
+                    Text("Location")
+                } footer: {
+                    Text("This is the name shown in the \(Self.filesLabel) sidebar.")
                 }
-                Section("Location") {
-                    TextField("Name in Finder & Files", text: $name)
+                Section {
                     if usesLocalDirectory {
-                        Button("Choose Local Folder…", systemImage: "folder.badge.plus") { showingDirectoryImporter = true }
+                        Button(localDirectory == nil ? "Choose Local Folder…" : "Change Folder…", systemImage: "folder.badge.plus") {
+                            showingDirectoryImporter = true
+                        }
                         if let localDirectory { LabeledContent("Folder", value: localDirectory.lastPathComponent) }
                     } else {
                         HStack {
-                            TextField("Remote subfolder", text: $root)
+                            TextField("Folder on remote", text: $root, prompt: Text("/ (entire remote)"))
+                                .autocorrectionDisabled()
                             Button("Browse…") { showingRemoteBrowser = true }.disabled(remote == nil)
                         }
                     }
                     Toggle("Read only", isOn: $readOnly).disabled(forcedReadOnly)
-                    if forcedReadOnly { Text("Read only is required by backend capabilities or managed policy.").font(.caption).foregroundStyle(.secondary) }
+                } header: {
+                    Text("Folder")
+                } footer: {
+                    if forcedReadOnly { Text("Read only is required by this backend or by your organization.") }
                 }
-                Section("Capability check") {
-                    Button(probing ? "Checking…" : "Check Connection and Capabilities") { probe() }.disabled(remoteID == nil || probing)
-                    if let capabilities {
-                        LabeledContent("Write access", value: capabilities.readOnly ? "Unavailable" : "Available")
-                        LabeledContent("Server-side move", value: capabilities.serverSideMove ? "Available" : "Unavailable")
-                        if capabilities.reportsQuota {
-                            if let quota {
-                                LabeledContent(
-                                    "Used", value: quota.used.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "Unavailable")
-                                LabeledContent(
-                                    "Free", value: quota.free.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "Unavailable")
-                            } else {
-                                LabeledContent("Quota", value: "Unavailable")
+                if remoteID != nil {
+                    Section("Connection") {
+                        if probing {
+                            HStack(spacing: 10) {
+                                ProgressView().controlSize(.small)
+                                Text("Checking connection…").foregroundStyle(.secondary)
                             }
-                        } else {
-                            LabeledContent("Quota", value: "Not reported by this backend")
+                        } else if let probeError {
+                            Label(probeError, systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button("Try Again", systemImage: "arrow.clockwise") { probeGeneration += 1 }
+                        } else if let capabilities {
+                            Label("Connected", systemImage: "checkmark.circle.fill").foregroundStyle(Color.mountliEmerald)
+                            LabeledContent("Write access", value: capabilities.readOnly ? "Unavailable" : "Available")
+                            LabeledContent("Server-side move", value: capabilities.serverSideMove ? "Available" : "Unavailable")
+                            if capabilities.reportsQuota, let quota {
+                                if let used = quota.used {
+                                    LabeledContent("Used", value: ByteCountFormatter.string(fromByteCount: used, countStyle: .file))
+                                }
+                                if let free = quota.free {
+                                    LabeledContent("Free", value: ByteCountFormatter.string(fromByteCount: free, countStyle: .file))
+                                }
+                            }
+                        } else if usesLocalDirectory && localDirectory == nil {
+                            Text("Choose a folder to continue.").foregroundStyle(.secondary)
                         }
                     }
                 }
             }
+            .formStyle(.grouped)
             .navigationTitle("Add Mount")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(saving ? "Adding…" : "Add") { add() }
-                        .disabled(
-                            remoteID == nil || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || saving || capabilities == nil
-                                || usesLocalDirectory && localDirectory == nil)
+                    Button(saving ? "Adding…" : "Add") { add() }.disabled(!canAdd)
                 }
             }
-            .onChange(of: remoteID) { _, id in
-                if let id, name.isEmpty { name = model.remotes.first { $0.id == id }?.displayName ?? "" }
+            .onAppear {
+                if remoteID == nil, model.remotes.count == 1 { remoteID = model.remotes.first?.id }
+            }
+            .onChange(of: remoteID, initial: true) { _, id in
+                if let id, !nameEdited || trimmedName.isEmpty {
+                    name = model.remotes.first { $0.id == id }?.displayName ?? ""
+                    nameEdited = false
+                }
                 localDirectory = nil
                 root = ""
-                capabilities = nil
-                quota = nil
             }
+            .task(id: probeKey) { await probe() }
             .fileImporter(isPresented: $showingDirectoryImporter, allowedContentTypes: [.folder]) { result in
                 switch result {
                 case .success(let url):
                     localDirectory = url
                     root = url.standardizedFileURL.path
-                    probe()
-                case .failure(let error): model.presentedError = error.localizedDescription
+                case .failure(let error): self.error = error.localizedDescription
                 }
             }
             .sheet(isPresented: $showingRemoteBrowser) {
                 if let remote { RemoteFolderPicker(model: model, remote: remote, selection: $root) }
             }
-            .onChange(of: root) { _, _ in
-                capabilities = nil
-                quota = nil
-            }
         }
+        .errorAlert($error, title: "Couldn’t add the mount")
         #if os(macOS)
-            .frame(minWidth: 500, minHeight: 500)
+            .frame(minWidth: 520, idealWidth: 560, minHeight: 520)
         #endif
     }
 
-    private func probe() {
-        guard let remoteID else { return }
-        probing = true
-        Task {
-            let scoped = localDirectory?.startAccessingSecurityScopedResource() == true
-            defer { if scoped { localDirectory?.stopAccessingSecurityScopedResource() } }
-            do {
-                let result = try await model.probeMount(remoteID: remoteID, root: root)
-                capabilities = result
-                quota = result.reportsQuota ? try? await model.quota(remoteID: remoteID, root: root) : nil
-                if result.readOnly || model.managedPolicy.forceReadOnly { readOnly = true }
-            } catch { model.presentedError = error.localizedDescription }
+    /// Checks the selected remote and folder automatically; typing in the folder field is debounced.
+    private func probe() async {
+        capabilities = nil
+        quota = nil
+        probeError = nil
+        guard let remoteID, !(usesLocalDirectory && localDirectory == nil) else {
             probing = false
+            return
         }
+        probing = true
+        do {
+            try await Task.sleep(for: .milliseconds(450))
+        } catch { return }
+        let scoped = localDirectory?.startAccessingSecurityScopedResource() == true
+        defer { if scoped { localDirectory?.stopAccessingSecurityScopedResource() } }
+        do {
+            let result = try await model.probeMount(remoteID: remoteID, root: root)
+            let usage = result.reportsQuota ? try? await model.quota(remoteID: remoteID, root: root) : nil
+            guard !Task.isCancelled else { return }
+            capabilities = result
+            quota = usage
+            if result.readOnly || model.managedPolicy.forceReadOnly { readOnly = true }
+        } catch {
+            guard !Task.isCancelled else { return }
+            probeError = error.localizedDescription
+        }
+        probing = false
     }
 
     private func add() {
@@ -1332,13 +1524,22 @@ private struct MountWizard: View {
             defer { if scoped { localDirectory?.stopAccessingSecurityScopedResource() } }
             do {
                 let latest = try await model.probeMount(remoteID: remoteID, root: root)
-                try await model.addMount(remoteID: remoteID, name: name, root: root, readOnly: readOnly || latest.readOnly, localDirectory: localDirectory)
+                try await model.addMount(
+                    remoteID: remoteID, name: trimmedName, root: root, readOnly: readOnly || latest.readOnly, localDirectory: localDirectory)
                 dismiss()
             } catch {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
                 saving = false
             }
         }
+    }
+
+    private static var filesLabel: String {
+        #if os(macOS)
+            "Finder"
+        #else
+            "Files"
+        #endif
     }
 }
 
@@ -1353,7 +1554,7 @@ extension NetworkPolicy {
 }
 
 extension OperationKind {
-    fileprivate var label: String {
+    var label: String {
         switch self {
         case .enumerate: "Enumerating folder"
         case .download: "Downloading file"

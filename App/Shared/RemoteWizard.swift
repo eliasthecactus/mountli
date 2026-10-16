@@ -86,6 +86,12 @@ struct RemoteWizard: View {
                         dismiss()
                     }
                 }
+                if editing == nil, selected != nil, step == nil {
+                    ToolbarItem(placement: .navigation) {
+                        Button("Back", systemImage: "chevron.backward") { selected = nil }
+                            .disabled(working)
+                    }
+                }
             }
         }
         .task {
@@ -489,8 +495,21 @@ struct RemoteWizard: View {
 
 private struct ProviderCardIcon: View {
     let type: String
+
+    private var symbol: String {
+        switch type {
+        case "crypt": "lock.fill"
+        case "sftp", "ftp", "smb", "webdav", "http", "nfs", "hdfs": "server.rack"
+        case "s3", "b2", "azureblob", "azurefiles", "swift", "gcs", "oracleobjectstorage", "qingstor", "storj": "shippingbox.fill"
+        case "local": "internaldrive.fill"
+        case "alias", "union", "combine", "chunker", "compress", "hasher", "cache": "square.stack.3d.up.fill"
+        case "protondrive": "shield.lefthalf.filled"
+        default: "cloud.fill"
+        }
+    }
+
     var body: some View {
-        Image(systemName: type == "crypt" ? "lock.fill" : type.contains("sftp") || type == "smb" ? "server.rack" : "cloud.fill")
+        Image(systemName: symbol)
             .foregroundStyle(Color.mountliEmerald)
             .frame(width: 30, height: 30)
             .background(Color.mountliEmerald.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))

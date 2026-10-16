@@ -48,7 +48,7 @@ struct MountliMacApp: App {
             MenuStatusView(model: model)
         } label: {
             Label {
-                Text("MOUNTLI — \(model.overallStatus.label)")
+                Text(model.mounts.isEmpty ? "MOUNTLI" : "MOUNTLI — \(model.overallStatus.label)")
             } icon: {
                 if let menuBarSymbol {
                     Image(systemName: menuBarSymbol)
@@ -87,7 +87,13 @@ private struct MenuStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label(model.overallStatus.label, systemImage: model.overallStatus.systemImage).font(.headline)
+                if model.mounts.isEmpty {
+                    Label("MOUNTLI", systemImage: "externaldrive").font(.headline)
+                } else {
+                    Label(model.overallStatus.label, systemImage: model.overallStatus.systemImage)
+                        .font(.headline)
+                        .foregroundStyle(model.overallStatus.tint)
+                }
                 Spacer()
                 if issueCount > 0 {
                     Button {
@@ -104,7 +110,14 @@ private struct MenuStatusView: View {
             }
             Divider()
             if model.mounts.isEmpty {
-                Text("No mounts configured").foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("No mounts yet").foregroundStyle(.secondary)
+                    Button("Add a Mount…") {
+                        openWindow(id: "main")
+                        NSApplication.shared.activate()
+                        if model.remotes.isEmpty { model.showingAddRemote = true } else { model.showingAddMount = true }
+                    }
+                }
             } else {
                 ScrollView {
                     VStack(spacing: 8) {
@@ -135,7 +148,7 @@ private struct MenuStatusView: View {
                 ForEach(active.prefix(4)) { operation in
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text(operation.kind.rawValue.capitalized)
+                            Text(operation.kind.label)
                             Spacer()
                             Button(model.cancellationRequestedIDs.contains(operation.id) ? "Requested" : "Cancel", role: .destructive) {
                                 Task { await model.cancelOperation(operation) }

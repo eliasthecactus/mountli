@@ -53,6 +53,7 @@ final class MountliUITests: XCTestCase {
     @MainActor
     func testCryptRemoteFormFitsConstrainedWindow() throws {
         let application = launchInterfaceFixture()
+        open("Remotes", in: application)
         let addRemote = application.buttons["Add Remote"].firstMatch
         XCTAssertTrue(addRemote.waitForExistence(timeout: 10))
         addRemote.tap()

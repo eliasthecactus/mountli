@@ -326,6 +326,7 @@ struct ConfigExportFlow: View {
     @State private var plaintext = false
     @State private var confirmingPlaintext = false
     @State private var working = false
+    @State private var error: String?
     @State private var showingExporter = false
     @State private var document = ConfigFileDocument()
 
@@ -360,6 +361,7 @@ struct ConfigExportFlow: View {
                 }
             }
         }
+        .errorAlert($error, title: "Export failed")
         #if os(macOS)
             .frame(minWidth: 520, minHeight: 390)
         #endif
@@ -374,7 +376,7 @@ struct ConfigExportFlow: View {
             Text("Anyone with this file can read the credentials and tokens for the exported remotes.")
         }
         .fileExporter(isPresented: $showingExporter, document: document, contentType: .rcloneConfig, defaultFilename: "rclone.conf") { result in
-            if case .failure(let error) = result { model.presentedError = error.localizedDescription } else { dismiss() }
+            if case .failure(let error) = result { self.error = error.localizedDescription } else { dismiss() }
         }
     }
 
@@ -389,7 +391,7 @@ struct ConfigExportFlow: View {
                 try await model.exportConfig(to: temporary, password: plaintext ? nil : password, selectedRemote: selectedRemote)
                 document = ConfigFileDocument(data: try Data(contentsOf: temporary))
                 showingExporter = true
-            } catch { model.presentedError = error.localizedDescription }
+            } catch { self.error = error.localizedDescription }
             working = false
         }
     }
@@ -408,6 +410,7 @@ struct ConfigImportFlow: View {
     @State private var requirementReferences: [String: ManagedResourceReference] = [:]
     @State private var confirmingReplacement = false
     @State private var working = false
+    @State private var error: String?
     @State private var committed = false
 
     private var collisions: [String] {
@@ -475,11 +478,12 @@ struct ConfigImportFlow: View {
                 }
             }
         }
+        .errorAlert($error, title: "Import failed")
         #if os(macOS)
             .frame(minWidth: 560, minHeight: 480)
         #endif
         .fileImporter(isPresented: $showingConfigPicker, allowedContentTypes: [.rcloneConfig, .plainText]) { result in
-            if case .success(let url) = result { parse(url) } else if case .failure(let error) = result { model.presentedError = error.localizedDescription }
+            if case .success(let url) = result { parse(url) } else if case .failure(let error) = result { self.error = error.localizedDescription }
         }
         .fileImporter(
             isPresented: Binding(
@@ -492,7 +496,7 @@ struct ConfigImportFlow: View {
             if case .success(let url) = result {
                 relink(url, requirement: requirement)
             } else if case .failure(let error) = result {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
             }
         }
         .confirmationDialog("Replace all colliding sections?", isPresented: $confirmingReplacement, titleVisibility: .visible) {
@@ -514,7 +518,7 @@ struct ConfigImportFlow: View {
             let scoped = url.startAccessingSecurityScopedResource()
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             do { imported = try await model.importConfig(from: url, password: password.isEmpty ? nil : password) } catch {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
             }
             working = false
         }
@@ -537,7 +541,7 @@ struct ConfigImportFlow: View {
                     imported?.sections[section].options[requirement.optionName] = value.path
                 }
                 completedRequirements.insert(requirement.id)
-            } catch { model.presentedError = error.localizedDescription }
+            } catch { self.error = error.localizedDescription }
             working = false
         }
     }
@@ -550,7 +554,7 @@ struct ConfigImportFlow: View {
                 committed = true
                 dismiss()
             } catch {
-                model.presentedError = error.localizedDescription
+                self.error = error.localizedDescription
                 working = false
             }
         }
